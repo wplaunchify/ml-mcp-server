@@ -5,22 +5,14 @@ import { makeWordPressRequest } from '../wordpress.js';
 // ==================== ZOD SCHEMA DEFINITIONS ====================
 
 const getColorsSchema = z.object({
-  mode: z.enum(['light', 'dark']).optional().default('light').describe('Color mode (light or dark)')
+  // No parameters needed - returns full color config
 });
 
 const updateColorsSchema = z.object({
-  mode: z.enum(['light', 'dark']).optional().default('light').describe('Color mode (light or dark)'),
-  colors: z.object({
-    navbar_bg: z.string().optional().describe('Navbar background color (hex)'),
-    navbar_text: z.string().optional().describe('Navbar text color (hex)'),
-    sidebar_bg: z.string().optional().describe('Sidebar background color (hex)'),
-    sidebar_text: z.string().optional().describe('Sidebar text color (hex)'),
-    feed_bg: z.string().optional().describe('Feed background color (hex)'),
-    button_primary: z.string().optional().describe('Primary button color (hex)'),
-    button_secondary: z.string().optional().describe('Secondary button color (hex)'),
-    link_color: z.string().optional().describe('Link color (hex)'),
-    accent_color: z.string().optional().describe('Accent color (hex)')
-  }).describe('Color values to update')
+  light_schema: z.enum(['default', 'ocean_blue', 'sky_blue', 'emerald_essence', 'sunset_sands', 'custom']).optional().describe('Light mode color schema preset'),
+  dark_schema: z.enum(['default', 'ocean_blue', 'sky_blue', 'emerald_essence', 'sunset_sands', 'custom']).optional().describe('Dark mode color schema preset'),
+  light_config: z.record(z.string()).optional().describe('Custom light mode colors (only used when light_schema is "custom")'),
+  dark_config: z.record(z.string()).optional().describe('Custom dark mode colors (only used when dark_schema is "custom")')
 });
 
 const updatePortalSettingsSchema = z.object({
@@ -59,7 +51,7 @@ export const fluentCommunityDesignTools: Tool[] = [
   },
   {
     name: 'fc_update_colors',
-    description: 'Update FluentCommunity color scheme for light or dark mode',
+    description: 'Update FluentCommunity color scheme. Use light_schema/dark_schema to select preset (default, ocean_blue, sky_blue, emerald_essence, sunset_sands, custom). Use light_config/dark_config to set custom colors when schema is "custom".',
     inputSchema: { type: 'object', properties: updateColorsSchema.shape }
   },
   {
@@ -100,10 +92,12 @@ export const fluentCommunityDesignHandlers: Record<string, (args: any) => Promis
   fc_update_colors: async (args: any) => {
     try {
       // Use FluentCommunity's NATIVE color-config endpoint
-      const data = {
-        mode: args.mode || 'light',
-        colors: args.colors
-      };
+      // Pass light_schema, dark_schema, light_config, dark_config directly
+      const data: any = {};
+      if (args.light_schema) data.light_schema = args.light_schema;
+      if (args.dark_schema) data.dark_schema = args.dark_schema;
+      if (args.light_config) data.light_config = args.light_config;
+      if (args.dark_config) data.dark_config = args.dark_config;
       
       const response = await makeWordPressRequest('POST', 'fluent-community/v2/settings/color-config', data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };

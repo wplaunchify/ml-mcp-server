@@ -126,6 +126,13 @@ const removeSpaceMemberSchema = z.object({
   user_id: z.number().describe('The user ID to remove')
 });
 
+const registerMemberSchema = z.object({
+  user_id: z.number().describe('The WordPress user ID to register in FluentCommunity'),
+  status: z.enum(['active', 'inactive']).optional().default('active').describe('Member status'),
+  avatar: z.string().optional().describe('Avatar URL'),
+  cover_photo: z.string().optional().describe('Cover photo URL')
+});
+
 const searchContentSchema = z.object({
   query: z.string().describe('Search query'),
   content_type: z.enum(['all', 'posts', 'comments', 'spaces']).optional().default('all').describe('Type of content to search'),
@@ -249,6 +256,11 @@ export const fluentCommunityTools: Tool[] = [
     name: 'fc_remove_space_member',
     description: 'Remove a user from a FluentCommunity space',
     inputSchema: { type: 'object', properties: removeSpaceMemberSchema.shape }
+  },
+  {
+    name: 'fc_register_member',
+    description: 'Register a WordPress user in FluentCommunity (creates XProfile entry so they appear in Members directory)',
+    inputSchema: { type: 'object', properties: registerMemberSchema.shape }
   },
   
   // ==================== SEARCH & ANALYTICS TOOLS ====================
@@ -492,6 +504,23 @@ export const fluentCommunityHandlers = {
   fc_remove_space_member: async (args: any) => {
     try {
       const response = await makeWordPressRequest('DELETE', `fc-manager/v1/spaces/${args.space_id}/members/${args.user_id}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fc_register_member: async (args: any) => {
+    try {
+      const memberData: any = {
+        user_id: args.user_id
+      };
+      
+      if (args.status) memberData.status = args.status;
+      if (args.avatar) memberData.avatar = args.avatar;
+      if (args.cover_photo) memberData.cover_photo = args.cover_photo;
+      
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/members/register', memberData);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
