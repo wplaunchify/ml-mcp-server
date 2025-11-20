@@ -1,0 +1,67 @@
+{
+  "name": "@wplaunchify/ml-mcp-server",
+  "version": "1.0.0",
+  "description": "Universal MCP Server for WordPress + Fluent Suite (Community, CRM, Cart) + MinuteLaunch Plugins. 145 tools for AI-powered WordPress management via Claude, Cursor, and other MCP clients.",
+  "type": "module",
+  "main": "./build/server.js",
+  "exports": "./build/server.js",
+  "bin": {
+    "ml-mcp-server": "./build/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "start": "node ./build/server.js",
+    "dev": "tsx watch src/server.ts",
+    "clean": "rimraf build",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "wordpress",
+    "mcp",
+    "model-context-protocol",
+    "fluent-community",
+    "fluent-crm",
+    "fluent-cart",
+    "minutelaunch",
+    "ai",
+    "claude",
+    "cursor"
+  ],
+  "author": "1WD LLC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wplaunchify/ml-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wplaunchify/ml-mcp-server/issues"
+  },
+  "homepage": "https://github.com/wplaunchify/ml-mcp-server#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.4.1",
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.5",
+    "fs-extra": "^11.2.0",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.0",
+    "rimraf": "^5.0.5",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ]
+}
+
