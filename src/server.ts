@@ -9,11 +9,50 @@ import { allTools, toolHandlers } from './tools/index.js';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
+// Generate server name from WordPress URL
+function generateServerName(): string {
+    const apiUrl = process.env.WORDPRESS_API_URL || '';
+    const customName = process.env.MCP_SERVER_NAME;
+    
+    if (customName) {
+        return customName;
+    }
+    
+    if (!apiUrl) {
+        return 'wordpress';
+    }
+    
+    try {
+        const url = new URL(apiUrl);
+        const hostname = url.hostname;
+        const parts = hostname.split('.');
+        
+        if (parts.length >= 3) {
+            // e.g., fccmanagermcp.instawp.co
+            const subdomain = parts[0];
+            const domain = parts[1];
+            
+            // Try with domain (no TLD): fccmanagermcp-instawp
+            const withDomain = `${subdomain}-${domain}`;
+            if (withDomain.length <= 25) {
+                return withDomain;
+            }
+            
+            // Fallback to subdomain only: fccmanagermcp
+            return subdomain;
+        }
+        
+        // Fallback to hostname without TLD
+        return parts.slice(0, -1).join('-') || 'wordpress';
+    } catch (e) {
+        return 'wordpress';
+    }
+}
 
 // Create MCP server instance
 const server = new McpServer({
-    name: "wordpress",
-    version: "0.0.1"
+    name: generateServerName(),
+    version: "1.0.7"
 }, {
     capabilities: {
         tools: allTools.reduce((acc, tool) => {
