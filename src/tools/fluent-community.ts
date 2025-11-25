@@ -350,7 +350,7 @@ export const fluentCommunityHandlers = {
   fc_update_post: async (args: any) => {
     try {
       const { post_id, ...updateData } = args;
-      const response = await makeWordPressRequest('POST', `fc-manager/v1/posts/${post_id}`, updateData);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/posts/${post_id}`, updateData);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -412,7 +412,7 @@ export const fluentCommunityHandlers = {
   fc_update_space: async (args: any) => {
     try {
       const { space_id, ...updateData } = args;
-      const response = await makeWordPressRequest('POST', `fc-manager/v1/spaces/${space_id}`, updateData);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/spaces/${space_id}`, updateData);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -454,7 +454,7 @@ export const fluentCommunityHandlers = {
   fc_update_comment: async (args: any) => {
     try {
       const { comment_id, ...updateData } = args;
-      const response = await makeWordPressRequest('POST', `fc-manager/v1/comments/${comment_id}`, updateData);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/comments/${comment_id}`, updateData);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };

@@ -4,8 +4,8 @@ import { makeWordPressRequest } from '../wordpress.js';
 
 /**
  * FluentCRM Tools - Email Marketing & CRM
- * Uses FluentCRM's native REST API at /fluent-crm/v2/
- * Documentation: https://fluentcrm.com/docs/rest-api/
+ * Uses FluentMCP wrapper API at /fc-manager/v1/fcrm/
+ * Proxies to FluentCRM's database via WordPress plugin
  */
 
 // ==================== ZOD SCHEMA DEFINITIONS ====================
@@ -207,7 +207,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
       if (args.search) params.append('search', args.search);
       if (args.status) params.append('status', args.status);
       
-      const response = await makeWordPressRequest('GET', `fluent-crm/v2/contacts?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/contacts?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -216,7 +216,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_get_contact: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fluent-crm/v2/contacts/${args.id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/contacts/${args.id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -225,7 +225,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_create_contact: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fluent-crm/v2/contacts', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/contacts', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -235,7 +235,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
   fcrm_update_contact: async (args: any) => {
     try {
       const { id, ...data } = args;
-      const response = await makeWordPressRequest('PUT', `fluent-crm/v2/contacts/${id}`, data);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/contacts/${id}`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -244,7 +244,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_delete_contact: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('DELETE', `fluent-crm/v2/contacts/${args.id}`);
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/contacts/${args.id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -259,7 +259,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
       if (args.per_page) params.append('per_page', args.per_page);
       if (args.search) params.append('search', args.search);
       
-      const response = await makeWordPressRequest('GET', `fluent-crm/v2/lists?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/lists?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -268,7 +268,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_get_list: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fluent-crm/v2/lists/${args.id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/lists/${args.id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -277,7 +277,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_create_list: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fluent-crm/v2/lists', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/lists', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -287,7 +287,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
   fcrm_update_list: async (args: any) => {
     try {
       const { id, ...data } = args;
-      const response = await makeWordPressRequest('PUT', `fluent-crm/v2/lists/${id}`, data);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/lists/${id}`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -296,7 +296,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_delete_list: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('DELETE', `fluent-crm/v2/lists/${args.id}`);
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/lists/${args.id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -311,7 +311,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
       if (args.per_page) params.append('per_page', args.per_page);
       if (args.search) params.append('search', args.search);
       
-      const response = await makeWordPressRequest('GET', `fluent-crm/v2/tags?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/tags?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -320,7 +320,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_get_tag: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fluent-crm/v2/tags/${args.id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/tags/${args.id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -329,7 +329,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_create_tag: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fluent-crm/v2/tags', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/tags', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -339,7 +339,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
   fcrm_update_tag: async (args: any) => {
     try {
       const { id, ...data } = args;
-      const response = await makeWordPressRequest('PUT', `fluent-crm/v2/tags/${id}`, data);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/tags/${id}`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -348,7 +348,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_delete_tag: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('DELETE', `fluent-crm/v2/tags/${args.id}`);
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/tags/${args.id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -363,7 +363,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
       if (args.per_page) params.append('per_page', args.per_page);
       if (args.status) params.append('status', args.status);
       
-      const response = await makeWordPressRequest('GET', `fluent-crm/v2/campaigns?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/campaigns?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -372,7 +372,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_get_campaign: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fluent-crm/v2/campaigns/${args.id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/campaigns/${args.id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -381,7 +381,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_create_campaign: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fluent-crm/v2/campaigns', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/campaigns', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -391,7 +391,7 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
   fcrm_send_campaign: async (args: any) => {
     try {
       const { id, ...data } = args;
-      const response = await makeWordPressRequest('POST', `fluent-crm/v2/campaigns/${id}/send`, data);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/campaigns/${id}`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };

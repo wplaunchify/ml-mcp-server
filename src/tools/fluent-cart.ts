@@ -310,7 +310,7 @@ export const fluentCartHandlers = {
       if (args.status) params.append('status', args.status);
       if (args.category) params.append('category', args.category);
       
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/products?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/products?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -319,7 +319,7 @@ export const fluentCartHandlers = {
 
   fcart_get_product: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/products/${args.product_id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/products/${args.product_id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -328,7 +328,7 @@ export const fluentCartHandlers = {
 
   fcart_create_product: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fluentcart/products', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcart/products', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -338,7 +338,7 @@ export const fluentCartHandlers = {
   fcart_update_product: async (args: any) => {
     try {
       const { product_id, ...data } = args;
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fluentcart/products/${product_id}`, data);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcart/products/${product_id}`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -348,7 +348,7 @@ export const fluentCartHandlers = {
   fcart_delete_product: async (args: any) => {
     try {
       const params = args.force ? '?force=true' : '';
-      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fluentcart/products/${args.product_id}${params}`);
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcart/products/${args.product_id}${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -358,7 +358,7 @@ export const fluentCartHandlers = {
   fcart_update_product_pricing: async (args: any) => {
     try {
       const { product_id, ...data } = args;
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fluentcart/products/${product_id}/pricing`, data);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcart/products/${product_id}/pricing`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -367,7 +367,7 @@ export const fluentCartHandlers = {
 
   fcart_get_product_thumbnail: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/products/${args.variant_id}/thumbnail`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/products/${args.variant_id}/thumbnail`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -377,7 +377,7 @@ export const fluentCartHandlers = {
   fcart_set_product_thumbnail: async (args: any) => {
     try {
       const { variant_id, ...data } = args;
-      const response = await makeWordPressRequest('POST', `fc-manager/v1/fluentcart/products/${variant_id}/thumbnail`, data);
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcart/products/${variant_id}/thumbnail`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -395,7 +395,7 @@ export const fluentCartHandlers = {
       if (args.date_from) params.append('date_from', args.date_from);
       if (args.date_to) params.append('date_to', args.date_to);
       
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/orders?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/orders?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -404,7 +404,7 @@ export const fluentCartHandlers = {
 
   fcart_get_order: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/orders/${args.order_id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/orders/${args.order_id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -413,7 +413,7 @@ export const fluentCartHandlers = {
 
   fcart_create_order: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fluentcart/orders', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcart/orders', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -423,7 +423,7 @@ export const fluentCartHandlers = {
   fcart_update_order: async (args: any) => {
     try {
       const { order_id, ...data } = args;
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fluentcart/orders/${order_id}`, data);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcart/orders/${order_id}`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -432,7 +432,7 @@ export const fluentCartHandlers = {
 
   fcart_mark_order_paid: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', `fc-manager/v1/fluentcart/orders/${args.order_id}/mark-paid`);
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcart/orders/${args.order_id}/mark-paid`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -442,7 +442,7 @@ export const fluentCartHandlers = {
   fcart_refund_order: async (args: any) => {
     try {
       const { order_id, ...data } = args;
-      const response = await makeWordPressRequest('POST', `fc-manager/v1/fluentcart/orders/${order_id}/refund`, data);
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcart/orders/${order_id}/refund`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -451,7 +451,7 @@ export const fluentCartHandlers = {
 
   fcart_update_order_statuses: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('PUT', 'fc-manager/v1/fluentcart/orders/update-statuses', args);
+      const response = await makeWordPressRequest('PUT', 'fc-manager/v1/fcart/orders/update-statuses', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -460,7 +460,7 @@ export const fluentCartHandlers = {
 
   fcart_delete_order: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fluentcart/orders/${args.order_id}/delete`);
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcart/orders/${args.order_id}/delete`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -475,7 +475,7 @@ export const fluentCartHandlers = {
       if (args.per_page) params.append('per_page', args.per_page);
       if (args.search) params.append('search', args.search);
       
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/customers?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/customers?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -484,7 +484,7 @@ export const fluentCartHandlers = {
 
   fcart_get_customer: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/customers/${args.customer_id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/customers/${args.customer_id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -493,7 +493,7 @@ export const fluentCartHandlers = {
 
   fcart_create_customer: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fluentcart/customers', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcart/customers', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -503,7 +503,7 @@ export const fluentCartHandlers = {
   fcart_update_customer: async (args: any) => {
     try {
       const { customer_id, ...data } = args;
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fluentcart/customers/${customer_id}`, data);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcart/customers/${customer_id}`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -518,7 +518,7 @@ export const fluentCartHandlers = {
       if (args.per_page) params.append('per_page', args.per_page);
       if (args.status) params.append('status', args.status);
       
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/coupons?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/coupons?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -527,7 +527,7 @@ export const fluentCartHandlers = {
 
   fcart_create_coupon: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fluentcart/coupons', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcart/coupons', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -537,7 +537,7 @@ export const fluentCartHandlers = {
   fcart_update_coupon: async (args: any) => {
     try {
       const { coupon_id, ...data } = args;
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fluentcart/coupons/${coupon_id}`, data);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcart/coupons/${coupon_id}`, data);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -546,7 +546,7 @@ export const fluentCartHandlers = {
 
   fcart_delete_coupon: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fluentcart/coupons/${args.coupon_id}`);
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcart/coupons/${args.coupon_id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -555,7 +555,7 @@ export const fluentCartHandlers = {
 
   fcart_get_coupon: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/coupons/${args.coupon_id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/coupons/${args.coupon_id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -564,7 +564,7 @@ export const fluentCartHandlers = {
 
   fcart_apply_coupon: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fluentcart/coupons/apply', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcart/coupons/apply', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -580,7 +580,7 @@ export const fluentCartHandlers = {
       if (args.status) params.append('status', args.status);
       if (args.customer_id) params.append('customer_id', args.customer_id);
       
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/subscriptions?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/subscriptions?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -589,7 +589,7 @@ export const fluentCartHandlers = {
 
   fcart_get_subscription: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/subscriptions/${args.subscription_id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/subscriptions/${args.subscription_id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -598,7 +598,7 @@ export const fluentCartHandlers = {
 
   fcart_cancel_subscription: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fluentcart/subscriptions/${args.subscription_id}/cancel`);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcart/subscriptions/${args.subscription_id}/cancel`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -607,7 +607,7 @@ export const fluentCartHandlers = {
 
   fcart_reactivate_subscription: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fluentcart/subscriptions/${args.subscription_id}/reactivate`);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcart/subscriptions/${args.subscription_id}/reactivate`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -622,7 +622,7 @@ export const fluentCartHandlers = {
       if (args.date_to) params.append('date_to', args.date_to);
       if (args.metrics) params.append('metrics', args.metrics.join(','));
       
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fluentcart/analytics?${params}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/analytics?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
