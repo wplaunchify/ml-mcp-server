@@ -17,6 +17,11 @@ import { mlImageEditorTools, mlImageEditorHandlers } from './ml-image-editor.js'
 import { fluentAffiliateTools, fluentAffiliateHandlers } from './fluent-affiliate.js';
 import { mlMediaHubTools, mlMediaHubHandlers } from './ml-media-hub.js';
 import { debugTools, debugHandlers } from './debug.js';
+import { fluentCartAnalyticsTools, fluentCartAnalyticsHandlers } from './fluent-cart-analytics.js';
+import { fluentCartLicensingTools, fluentCartLicensingHandlers } from './fluent-cart-licensing.js';
+import { fluentCartAdminTools, fluentCartAdminHandlers } from './fluent-cart-admin.js';
+import { fluentCommunityChatTools, fluentCommunityChatHandlers } from './fluent-community-chat.js';
+import { fluentCommunityAdminTools, fluentCommunityAdminHandlers } from './fluent-community-admin.js';
 
 // Combine all tools - WordPress + FluentCommunity + FluentCRM + FluentCart + ML Plugins
 export const allTools: Tool[] = [
@@ -30,8 +35,13 @@ export const allTools: Tool[] = [
   ...fluentCommunityTools,       // FluentCommunity: spaces, posts, members
   ...fluentCommunityDesignTools, // FluentCommunity: colors, branding, CSS
   ...fluentCommunityLayoutTools, // FluentCommunity: layout control
+  ...fluentCommunityChatTools,   // FluentCommunity: chat threads, messages
+  ...fluentCommunityAdminTools,  // FluentCommunity: cleanup, terms
   ...fluentCRMTools,             // FluentCRM: contacts, lists, campaigns
   ...fluentCartTools,            // FluentCart: products, orders, customers, subscriptions
+  ...fluentCartAnalyticsTools,   // FluentCart: reports, stats, analytics
+  ...fluentCartLicensingTools,   // FluentCart: licensing charts, summary
+  ...fluentCartAdminTools,       // FluentCart: files, categories, notifications, settings
   ...mlCanvasTools,              // ML Canvas Block: surgical HTML editing
   ...mlImageEditorTools,         // ML Image Editor: AI generation/editing
   ...mlMediaHubTools,            // ML Media Hub: image/icon search and filters
@@ -50,8 +60,13 @@ export const toolHandlers = {
   ...fluentCommunityHandlers,
   ...fluentCommunityDesignHandlers,
   ...fluentCommunityLayoutHandlers,
+  ...fluentCommunityChatHandlers,
+  ...fluentCommunityAdminHandlers,
   ...fluentCRMHandlers,
   ...fluentCartHandlers,
+  ...fluentCartAnalyticsHandlers,
+  ...fluentCartLicensingHandlers,
+  ...fluentCartAdminHandlers,
   ...mlCanvasHandlers,
   ...mlImageEditorHandlers,
   ...mlMediaHubHandlers,

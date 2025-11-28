@@ -286,17 +286,6 @@ export const fluentCartTools = [
       subscription_id: z.number().describe('Subscription ID'),
     }).shape },
   },
-
-  // Analytics
-  {
-    name: 'fcart_get_analytics',
-    description: 'Get store analytics and sales data',
-    inputSchema: { type: 'object' as const, properties: z.object({
-      date_from: z.string().optional().describe('Start date (YYYY-MM-DD)'),
-      date_to: z.string().optional().describe('End date (YYYY-MM-DD)'),
-      metrics: z.array(z.enum(['revenue', 'orders', 'customers', 'products_sold'])).optional().describe('Metrics to retrieve'),
-    }).shape },
-  },
 ];
 
 export const fluentCartHandlers = {
@@ -608,21 +597,6 @@ export const fluentCartHandlers = {
   fcart_reactivate_subscription: async (args: any) => {
     try {
       const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcart/subscriptions/${args.subscription_id}/reactivate`);
-      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
-    } catch (error: any) {
-      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
-    }
-  },
-
-  // Analytics handler
-  fcart_get_analytics: async (args: any) => {
-    try {
-      const params = new URLSearchParams();
-      if (args.date_from) params.append('date_from', args.date_from);
-      if (args.date_to) params.append('date_to', args.date_to);
-      if (args.metrics) params.append('metrics', args.metrics.join(','));
-      
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcart/analytics?${params}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
