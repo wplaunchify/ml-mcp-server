@@ -16,25 +16,26 @@ import { mlCanvasTools, mlCanvasHandlers } from './ml-canvas.js';
 import { mlImageEditorTools, mlImageEditorHandlers } from './ml-image-editor.js';
 import { fluentAffiliateTools, fluentAffiliateHandlers } from './fluent-affiliate.js';
 import { mlMediaHubTools, mlMediaHubHandlers } from './ml-media-hub.js';
+import { debugTools, debugHandlers } from './debug.js';
 
-// Combine all tools - WordPress + FluentCommunity + FluentCRM + FluentCart + ML Plugins = 145 tools
+// Combine all tools - WordPress + FluentCommunity + FluentCRM + FluentCart + ML Plugins
 export const allTools: Tool[] = [
-  ...unifiedContentTools,        // 8 tools (unified content management)
-  ...unifiedTaxonomyTools,       // 8 tools (unified taxonomy management)
-  ...pluginTools,                // 5 tools (WordPress plugin management)
-  ...mediaTools,                 // 4 tools (WordPress media library)
-  ...userTools,                  // 5 tools (WordPress user management)
-  ...pluginRepositoryTools,      // 2 tools (WordPress.org plugin repository)
-  ...commentTools,               // 5 tools (WordPress comments)
-  ...fluentCommunityTools,       // 21 tools (FluentCommunity spaces, posts, members)
-  ...fluentCommunityDesignTools, // 6 tools (FluentCommunity colors, branding, CSS)
-  ...fluentCommunityLayoutTools, // 2 tools (FluentCommunity layout control)
-  ...fluentCRMTools,             // 19 tools (FluentCRM contacts, lists, campaigns)
-  ...fluentCartTools,            // 31 tools (FluentCart products, orders, customers)
-  ...fluentAffiliateTools,       // 0 tools (FluentAffiliate - coming soon)
-  ...mlCanvasTools,              // 3 tools (ML Canvas Block surgical HTML editing)
-  ...mlImageEditorTools,         // 8 tools (ML Image Editor AI generation/editing)
-  ...mlMediaHubTools             // 18 tools (ML Media Hub: basic + advanced search/filters)
+  ...unifiedContentTools,        // WordPress Core: unified content management
+  ...unifiedTaxonomyTools,       // WordPress Core: unified taxonomy management
+  ...pluginTools,                // WordPress Core: plugin management
+  ...mediaTools,                 // WordPress Core: media library
+  ...userTools,                  // WordPress Core: user management
+  ...pluginRepositoryTools,      // WordPress Core: WordPress.org plugin repository
+  ...commentTools,               // WordPress Core: comments
+  ...fluentCommunityTools,       // FluentCommunity: spaces, posts, members
+  ...fluentCommunityDesignTools, // FluentCommunity: colors, branding, CSS
+  ...fluentCommunityLayoutTools, // FluentCommunity: layout control
+  ...fluentCRMTools,             // FluentCRM: contacts, lists, campaigns
+  ...fluentCartTools,            // FluentCart: products, orders, customers, subscriptions
+  ...mlCanvasTools,              // ML Canvas Block: surgical HTML editing
+  ...mlImageEditorTools,         // ML Image Editor: AI generation/editing
+  ...mlMediaHubTools,            // ML Media Hub: image/icon search and filters
+  ...debugTools                  // Debug: diagnostic tools
 ];
 
 // Combine all handlers
@@ -51,8 +52,8 @@ export const toolHandlers = {
   ...fluentCommunityLayoutHandlers,
   ...fluentCRMHandlers,
   ...fluentCartHandlers,
-  ...fluentAffiliateHandlers,
   ...mlCanvasHandlers,
   ...mlImageEditorHandlers,
-  ...mlMediaHubHandlers
+  ...mlMediaHubHandlers,
+  ...debugHandlers
 };
