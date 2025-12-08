@@ -34,6 +34,15 @@ const deleteMediaSchema = z.object({
   force: z.boolean().optional().describe("Force deletion bypassing trash")
 }).strict();
 
+// Schema for uploading a local file to WordPress media library
+const uploadMediaSchema = z.object({
+  file_path: z.string().describe("Local file path to upload"),
+  title: z.string().optional().describe("Media title"),
+  alt_text: z.string().optional().describe("Alternate text for the media"),
+  caption: z.string().optional().describe("Caption of the media"),
+  description: z.string().optional().describe("Description of the media")
+}).strict();
+
 // Define the tool set for media operations
 export const mediaTools: Tool[] = [
   {
@@ -45,6 +54,11 @@ export const mediaTools: Tool[] = [
     name: "create_media",
     description: "Creates a new media item",
     inputSchema: { type: "object", properties: createMediaSchema.shape }
+  },
+  {
+    name: "upload_media",
+    description: "Uploads a local file to WordPress media library",
+    inputSchema: { type: "object", properties: uploadMediaSchema.shape }
   },
   {
     name: "edit_media",
@@ -129,6 +143,67 @@ export const mediaHandlers = {
         toolResult: {
           isError: true,
           content: [{ type: "text", text: `Error creating media: ${errorMessage}` }]
+        }
+      };
+    }
+  },
+  upload_media: async (params: z.infer<typeof uploadMediaSchema>) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const axios = (await import('axios')).default;
+      const FormData = (await import('form-data')).default;
+
+      // Check if file exists
+      if (!fs.existsSync(params.file_path)) {
+        return {
+          toolResult: {
+            isError: true,
+            content: [{ type: "text", text: `File not found: ${params.file_path}` }]
+          }
+        };
+      }
+
+      // Read the file
+      const fileBuffer = fs.readFileSync(params.file_path);
+      const fileName = path.basename(params.file_path);
+
+      // Create form data
+      const form = new FormData();
+      form.append('file', fileBuffer, {
+        filename: fileName,
+        contentType: 'application/octet-stream'
+      });
+
+      // Append additional fields if provided
+      if (params.title) form.append('title', params.title);
+      if (params.alt_text) form.append('alt_text', params.alt_text);
+      if (params.caption) form.append('caption', params.caption);
+      if (params.description) form.append('description', params.description);
+
+      // Upload to WordPress via our custom endpoint
+      const response = await makeWordPressRequest(
+        'POST',
+        'fc-manager/v1/wordpress/media/upload',
+        form,
+        {
+          isFormData: true,
+          headers: form.getHeaders(),
+          rawResponse: true
+        }
+      );
+
+      return {
+        toolResult: {
+          content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }]
+        }
+      };
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message;
+      return {
+        toolResult: {
+          isError: true,
+          content: [{ type: "text", text: `Error uploading media: ${errorMessage}` }]
         }
       };
     }

@@ -13,7 +13,6 @@ import { fluentCommunityLayoutTools, fluentCommunityLayoutHandlers } from './flu
 import { fluentCartTools, fluentCartHandlers } from './fluent-cart.js';
 import { fluentCRMTools, fluentCRMHandlers } from './fluent-crm.js';
 import { mlCanvasTools, mlCanvasHandlers } from './ml-canvas.js';
-import { mlSimpleSiteTools, mlSimpleSiteHandlers } from './ml-simple-site.js';
 import { mlImageEditorTools, mlImageEditorHandlers } from './ml-image-editor.js';
 import { fluentAffiliateTools, fluentAffiliateHandlers } from './fluent-affiliate.js';
 import { mlMediaHubTools, mlMediaHubHandlers } from './ml-media-hub.js';
@@ -36,8 +35,7 @@ const toolCategories = {
     ...userTools,
     ...pluginRepositoryTools,
     ...commentTools,
-    ...mlCanvasTools,
-    ...mlSimpleSiteTools
+    ...mlCanvasTools
   ],
   // Full FluentCommunity (91 tools) - legacy support
   fluentcommunity: [
@@ -80,7 +78,6 @@ const toolCategories = {
 };
 
 const handlerCategories = {
-  // WP (ENABLED_TOOLS=wordpress) - 45 tools
   wordpress: {
     ...unifiedContentHandlers,
     ...unifiedTaxonomyHandlers,
@@ -88,9 +85,7 @@ const handlerCategories = {
     ...mediaHandlers,
     ...userHandlers,
     ...pluginRepositoryHandlers,
-    ...commentHandlers,
-    ...mlCanvasHandlers,  // ML Canvas is part of WordPress category
-    ...mlSimpleSiteHandlers  // ML Simple Site tools
+    ...commentHandlers
   },
   fluentcommunity: {
     ...fluentCommunityHandlers,
