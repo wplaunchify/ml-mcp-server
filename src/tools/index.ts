@@ -69,7 +69,6 @@ const toolCategories = {
     ...fluentCRMTools
   ],
   mlplugins: [
-    ...mlCanvasTools,
     ...mlImageEditorTools,
     ...mlMediaHubTools,
     ...fluentAffiliateTools
@@ -119,7 +118,6 @@ const handlerCategories = {
     ...fluentCRMHandlers
   },
   mlplugins: {
-    ...mlCanvasHandlers,
     ...mlImageEditorHandlers,
     ...mlMediaHubHandlers,
     ...fluentAffiliateHandlers

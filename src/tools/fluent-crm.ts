@@ -71,6 +71,20 @@ const createCampaignSchema = z.object({
   scheduled_at: z.string().optional(),
 });
 
+// Template schemas
+const listTemplatesSchema = z.object({
+  page: z.number().optional(),
+  per_page: z.number().optional(),
+  search: z.string().optional(),
+});
+
+const createTemplateSchema = z.object({
+  post_title: z.string(),
+  post_content: z.string(),
+  email_subject: z.string().optional(),
+  design_template: z.enum(['simple', 'plain', 'classic', 'raw_classic', 'raw_html']).optional(),
+});
+
 // ==================== TOOL DEFINITIONS ====================
 
 export const fluentCRMTools: Tool[] = [
@@ -192,6 +206,39 @@ export const fluentCRMTools: Tool[] = [
       id: z.number(),
       scheduled_at: z.string().optional(),
     }).shape }
+  },
+  
+  // Template Management
+  {
+    name: 'fcrm_list_templates',
+    description: 'List all FluentCRM email templates',
+    inputSchema: { type: 'object' as const, properties: listTemplatesSchema.shape }
+  },
+  {
+    name: 'fcrm_get_template',
+    description: 'Get a specific FluentCRM email template by ID',
+    inputSchema: { type: 'object' as const, properties: z.object({ id: z.number() }).shape }
+  },
+  {
+    name: 'fcrm_create_template',
+    description: 'Create a new FluentCRM email template',
+    inputSchema: { type: 'object' as const, properties: createTemplateSchema.shape }
+  },
+  {
+    name: 'fcrm_update_template',
+    description: 'Update an existing FluentCRM email template',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      id: z.number(),
+      post_title: z.string().optional(),
+      post_content: z.string().optional(),
+      email_subject: z.string().optional(),
+      design_template: z.enum(['simple', 'plain', 'classic', 'raw_classic', 'raw_html']).optional(),
+    }).shape }
+  },
+  {
+    name: 'fcrm_delete_template',
+    description: 'Delete a FluentCRM email template',
+    inputSchema: { type: 'object' as const, properties: z.object({ id: z.number() }).shape }
   },
 ];
 
@@ -392,6 +439,58 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
     try {
       const { id, ...data } = args;
       const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/campaigns/${id}`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  // Template handlers
+  fcrm_list_templates: async (args: any) => {
+    try {
+      const params = new URLSearchParams();
+      if (args.page) params.append('page', args.page);
+      if (args.per_page) params.append('per_page', args.per_page);
+      if (args.search) params.append('search', args.search);
+      
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/templates?${params}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_get_template: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/templates/${args.id}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_create_template: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/templates', args);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_update_template: async (args: any) => {
+    try {
+      const { id, ...data } = args;
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/templates/${id}`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_delete_template: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/templates/${args.id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };

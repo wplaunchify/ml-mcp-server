@@ -13,7 +13,7 @@ let wpClient: AxiosInstance;
 export async function initWordPress() {
   const apiUrl = process.env.WORDPRESS_API_URL;
   const username = process.env.WORDPRESS_USERNAME;
-  const appPassword = process.env.WORDPRESS_PASSWORD;
+  const appPassword = process.env.WORDPRESS_APP_PASSWORD || process.env.WORDPRESS_PASSWORD;
   
   if (!apiUrl) {
     throw new Error('WordPress API URL not found in environment variables');
@@ -53,13 +53,21 @@ export async function initWordPress() {
 
   wpClient = axios.create(config);
 
-  // Verify connection to WordPress API
-  try {
-    await wpClient.get('');
-    logToFile('Successfully connected to WordPress API');
-  } catch (error: any) {
-    logToFile(`Failed to connect to WordPress API: ${error.message}`);
-    throw new Error(`Failed to connect to WordPress API: ${error.message}`);
+  // Optionally verify connection to WordPress API (don't crash if it fails)
+  // This prevents startup crashes when multiple servers start simultaneously
+  const skipInitCheck = process.env.SKIP_INIT_CHECK === 'true';
+  
+  if (!skipInitCheck) {
+    try {
+      await wpClient.get('');
+      logToFile('Successfully connected to WordPress API');
+    } catch (error: any) {
+      logToFile(`Warning: Failed to verify WordPress API connection: ${error.message}`);
+      logToFile('Server will continue anyway. Connection will be verified on first tool call.');
+      // Don't throw - let the server start and fail gracefully on first tool call if needed
+    }
+  } else {
+    logToFile('Skipping WordPress API connection verification (SKIP_INIT_CHECK=true)');
   }
 }
 
