@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // src/server.ts
 import * as dotenv from 'dotenv';
-dotenv.config(); // Load environment variables from .env first
+// Load environment variables from .env file if it exists (optional for npx usage)
+dotenv.config({ path: '.env' });
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -108,9 +109,10 @@ async function main() {
     const { logToFile } = await import('./wordpress.js');
     logToFile('Starting WordPress MCP server...');
     
+    // Environment variables are passed by MCP client (Claude Desktop, Cursor, etc.)
+    // Don't exit here - let initWordPress() handle the validation
     if (!process.env.WORDPRESS_API_URL) {
-        logToFile('Missing required environment variables. Please check your .env file.');
-        process.exit(1);
+        logToFile('Warning: WORDPRESS_API_URL not set. Will fail on first tool call if not provided by MCP client.');
     }
 
     try {
@@ -125,7 +127,8 @@ async function main() {
         logToFile('WordPress MCP Server running on stdio');
     } catch (error) {
         logToFile(`Failed to initialize server: ${error}`);
-        process.exit(1);
+        // Don't exit immediately - let the MCP client handle the error
+        throw error;
     }
 }
 
