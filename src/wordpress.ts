@@ -53,11 +53,12 @@ export async function initWordPress() {
 
   wpClient = axios.create(config);
 
-  // Optionally verify connection to WordPress API (don't crash if it fails)
-  // This prevents startup crashes when multiple servers start simultaneously
-  const skipInitCheck = process.env.SKIP_INIT_CHECK === 'true';
+  // CRITICAL: NO HTTP requests during startup to prevent Claude Desktop hangs
+  // Connection will be verified on first tool call instead
+  // Set VERIFY_CONNECTION_ON_STARTUP=true to enable startup verification (NOT recommended)
+  const verifyOnStartup = process.env.VERIFY_CONNECTION_ON_STARTUP === 'true';
   
-  if (!skipInitCheck) {
+  if (verifyOnStartup) {
     try {
       await wpClient.get('');
       logToFile('Successfully connected to WordPress API');
@@ -67,7 +68,8 @@ export async function initWordPress() {
       // Don't throw - let the server start and fail gracefully on first tool call if needed
     }
   } else {
-    logToFile('Skipping WordPress API connection verification (SKIP_INIT_CHECK=true)');
+    logToFile('Skipping WordPress API connection verification during startup (prevents Claude Desktop hangs)');
+    logToFile('Connection will be verified on first tool call.');
   }
 }
 
@@ -171,60 +173,6 @@ Data: ${JSON.stringify(error.response?.data || {}, null, 2)}
     logToFile(errorLog);
     throw error;
   }
-}
-
-/**
- * Detect which plugins are installed and active
- * Returns a set of plugin slugs that are active
- * 
- * IMPORTANT: This function makes an HTTP request and should NOT block server startup.
- * It has a timeout and fails gracefully to prevent Claude Desktop crashes.
- */
-export async function detectInstalledPlugins(): Promise<Set<string>> {
-  const installedPlugins = new Set<string>();
-  
-  // Check if plugin detection should be skipped
-  const skipDetection = process.env.SKIP_PLUGIN_DETECTION === 'true';
-  if (skipDetection) {
-    logToFile('Plugin detection skipped (SKIP_PLUGIN_DETECTION=true)');
-    return installedPlugins; // Return empty set - will load all tools
-  }
-  
-  try {
-    // Add timeout to prevent blocking server startup
-    const timeoutMs = 3000; // 3 seconds max
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Plugin detection timeout')), timeoutMs);
-    });
-    
-    const detectionPromise = (async () => {
-      // Get list of active plugins
-      const response = await makeWordPressRequest('GET', 'wp/v2/plugins', { status: 'active' });
-      
-      if (Array.isArray(response)) {
-        response.forEach((plugin: any) => {
-          // Extract plugin slug from plugin path (e.g., "fluent-crm/fluent-crm.php" -> "fluent-crm")
-          const slug = plugin.plugin?.split('/')[0] || plugin.slug;
-          if (slug) {
-            installedPlugins.add(slug);
-          }
-        });
-      }
-      
-      return installedPlugins;
-    })();
-    
-    // Race between detection and timeout
-    await Promise.race([detectionPromise, timeoutPromise]);
-    
-    logToFile(`✓ Detected active plugins: ${Array.from(installedPlugins).join(', ')}`);
-  } catch (error: any) {
-    // Silently fail - if we can't detect plugins, we'll load all tools
-    // This prevents server crashes when WordPress is slow or endpoint requires auth
-    logToFile(`Plugin detection failed (will load all tools): ${error.message}`);
-  }
-  
-  return installedPlugins;
 }
 
 /**
