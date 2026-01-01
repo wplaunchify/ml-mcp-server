@@ -107,8 +107,10 @@ export async function makeWordPressRequest(
     rawResponse?: boolean;
   }
 ) {
+  // Lazy initialization - initialize on first request if not already done
   if (!wpClient) {
-    throw new Error('WordPress client not initialized');
+    logToFile('WordPress client not initialized, initializing now...');
+    await initWordPress();
   }
 
   // Log data (skip for FormData which can't be stringified)

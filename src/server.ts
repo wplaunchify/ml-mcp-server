@@ -106,25 +106,23 @@ async function main() {
     const { logToFile } = await import('./wordpress.js');
     logToFile('Starting WordPress MCP server...');
     
-    // Environment variables are passed by MCP client (Claude Desktop, Cursor, etc.)
-    // Don't exit here - let initWordPress() handle the validation
+    // CRITICAL: DO NOT call initWordPress() during startup
+    // It will be called lazily on first tool execution
+    // This prevents blocking when multiple servers start simultaneously
+    
     if (!process.env.WORDPRESS_API_URL) {
-        logToFile('Warning: WORDPRESS_API_URL not set. Will fail on first tool call if not provided by MCP client.');
+        logToFile('Warning: WORDPRESS_API_URL not set. Will be initialized on first tool call.');
+    } else {
+        logToFile('WORDPRESS_API_URL is set. Client will be initialized on first tool call.');
     }
 
     try {
-        logToFile('Initializing WordPress client...');
-        const { initWordPress } = await import('./wordpress.js');
-        await initWordPress();
-        logToFile('WordPress client initialized successfully.');
-
         logToFile('Setting up server transport...');
         const transport = new StdioServerTransport();
         await server.connect(transport);
         logToFile('WordPress MCP Server running on stdio');
     } catch (error) {
         logToFile(`Failed to initialize server: ${error}`);
-        // Don't exit immediately - let the MCP client handle the error
         throw error;
     }
 }
