@@ -1,7 +1,7 @@
 {
   "name": "@wplaunchify/ml-mcp-server",
-  "version": "2.4.10",
-  "description": "Universal MCP Server for WordPress + Fluent Suite (Community, CRM, Cart) + MinuteLaunch Plugins. Comprehensive tools for AI-powered WordPress management via Claude, Cursor, and other MCP clients.",
+  "version": "2.5.4",
+  "description": "Universal MCP Server for WordPress + Fluent Suite (Community, CRM, Cart) + FluentMCP Pro. Comprehensive tools for AI-powered WordPress management via Claude, Cursor, and other MCP clients.",
   "type": "module",
   "main": "./build/server.js",
   "exports": "./build/server.js",
@@ -25,6 +25,8 @@
     "fluent-community",
     "fluent-crm",
     "fluent-cart",
+    "fluentmcp-pro",
+    "woocommerce",
     "minutelaunch",
     "ai",
     "claude",

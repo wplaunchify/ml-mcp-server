@@ -25,6 +25,7 @@ import { fluentCommunityChatTools, fluentCommunityChatHandlers } from './fluent-
 import { fluentCommunityAdminTools, fluentCommunityAdminHandlers } from './fluent-community-admin.js';
 import { fluentCommunityCoreTools, fluentCommunityCoreHandlers } from './fluent-community-core.js';
 import { fluentCommunityLearningTools, fluentCommunityLearningHandlers } from './fluent-community-learning.js';
+import { fluentMcpProTools, fluentMcpProHandlers } from './fluent-mcp-pro.js';
 
 // Tool categories for selective loading
 const toolCategories = {
@@ -72,6 +73,9 @@ const toolCategories = {
     ...mlImageEditorTools,
     ...mlMediaHubTools,
     ...fluentAffiliateTools
+  ],
+  pro: [
+    ...fluentMcpProTools
   ],
   debug: [
     ...debugTools
@@ -122,6 +126,9 @@ const handlerCategories = {
     ...mlMediaHubHandlers,
     ...fluentAffiliateHandlers
   },
+  pro: {
+    ...fluentMcpProHandlers
+  },
   debug: {
     ...debugHandlers
   }
@@ -139,6 +146,7 @@ function getFilteredTools(): Tool[] {
       ...toolCategories.fluentcart,
       ...toolCategories.fluentcrm,
       ...toolCategories.mlplugins,
+      ...toolCategories.pro,
       ...toolCategories.debug
     ];
   }
@@ -157,6 +165,9 @@ function getFilteredTools(): Tool[] {
     'fluent-crm': 'fluentcrm',
     'fluentcrm': 'fluentcrm',
     'mlplugins': 'mlplugins',
+    'pro': 'pro',
+    'fluentmcp-pro': 'pro',
+    'fluent-mcp-pro': 'pro',
     'debug': 'debug'
   };
   
@@ -173,6 +184,7 @@ function getFilteredTools(): Tool[] {
     ...toolCategories.fluentcart,
     ...toolCategories.fluentcrm,
     ...toolCategories.mlplugins,
+    ...toolCategories.pro,
     ...toolCategories.debug
   ];
 }
@@ -188,6 +200,7 @@ function getFilteredHandlers(): Record<string, any> {
       ...handlerCategories.fluentcart,
       ...handlerCategories.fluentcrm,
       ...handlerCategories.mlplugins,
+      ...handlerCategories.pro,
       ...handlerCategories.debug
     };
   }
@@ -206,6 +219,9 @@ function getFilteredHandlers(): Record<string, any> {
     'fluent-crm': 'fluentcrm',
     'fluentcrm': 'fluentcrm',
     'mlplugins': 'mlplugins',
+    'pro': 'pro',
+    'fluentmcp-pro': 'pro',
+    'fluent-mcp-pro': 'pro',
     'debug': 'debug'
   };
   
@@ -220,6 +236,7 @@ function getFilteredHandlers(): Record<string, any> {
     ...handlerCategories.fluentcart,
     ...handlerCategories.fluentcrm,
     ...handlerCategories.mlplugins,
+    ...handlerCategories.pro,
     ...handlerCategories.debug
   };
 }

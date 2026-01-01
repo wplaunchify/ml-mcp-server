@@ -71,6 +71,70 @@ export const mlSimpleSiteTools = [
     description: 'Get the frontend preview URL for the ML Simple Site',
     inputSchema: { type: 'object' as const, properties: {} },
   },
+  {
+    name: 'mlss_edit_block',
+    description: 'Edit a specific block with surgical precision. Supports full replacement or find/replace mode.',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      block_index: z.number().describe('Index of block to edit (0-based)'),
+      name: z.string().optional().describe('New block name'),
+      html: z.string().optional().describe('New HTML content (replaces entire HTML)'),
+      css: z.string().optional().describe('New CSS content (replaces entire CSS)'),
+      find_html: z.string().optional().describe('HTML string to find and replace'),
+      replace_html: z.string().optional().describe('HTML string to replace with'),
+      find_css: z.string().optional().describe('CSS string to find and replace'),
+      replace_css: z.string().optional().describe('CSS string to replace with'),
+      hide_from_nav: z.boolean().optional().describe('Hide block from navigation'),
+    }).shape },
+  },
+  {
+    name: 'mlss_reorder_blocks',
+    description: 'Reorder blocks by providing new order as array of indices (e.g., [2, 0, 1, 3] moves block 2 to position 0)',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      block_order: z.array(z.number()).describe('New order of blocks by index (must include all blocks)'),
+    }).shape },
+  },
+  {
+    name: 'mlss_delete_block',
+    description: 'Delete a specific block by index',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      block_index: z.number().describe('Index of block to delete (0-based)'),
+    }).shape },
+  },
+  {
+    name: 'mlss_create_contact',
+    description: 'Create contact in FluentCRM with optional list and tags. One-call contact creation.',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      email: z.string().describe('Contact email address (required)'),
+      full_name: z.string().optional().describe('Full name (will be split into first/last)'),
+      first_name: z.string().optional().describe('First name'),
+      last_name: z.string().optional().describe('Last name'),
+      phone: z.string().optional().describe('Phone number'),
+      company: z.string().optional().describe('Company name'),
+      title: z.string().optional().describe('Job title'),
+      location: z.string().optional().describe('Location/address'),
+      list_id: z.number().optional().describe('FluentCRM list ID to add contact to'),
+      tags: z.array(z.string()).optional().describe('Array of tags to add'),
+    }).shape },
+  },
+  {
+    name: 'mlss_get_revisions',
+    description: 'List all saved revisions of the SimpleSite with metadata (index, description, timestamp, user, block count). Use this to show version history or before restoring.',
+    inputSchema: { type: 'object' as const, properties: {} },
+  },
+  {
+    name: 'mlss_restore_revision',
+    description: 'Restore a specific revision by index. Automatically saves current state before restoring. Perfect for rolling back changes or A/B testing.',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      revision_index: z.number().describe('Index of revision to restore (0 = oldest, get from mlss_get_revisions)'),
+    }).shape },
+  },
+  {
+    name: 'mlss_save_revision',
+    description: 'Save current state as a revision with optional description. Use before making experimental changes.',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      description: z.string().optional().describe('Description of this revision (e.g., "Before major redesign")'),
+    }).shape },
+  },
 ];
 
 export const mlSimpleSiteHandlers = {
@@ -188,6 +252,174 @@ export const mlSimpleSiteHandlers = {
           content: [{
             type: 'text',
             text: `Error getting preview URL: ${error.message}`
+          }]
+        }
+      };
+    }
+  },
+
+  mlss_edit_block: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'mlss/v1/blocks/edit', args);
+      return {
+        toolResult: {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(response, null, 2)
+          }]
+        }
+      };
+    } catch (error: any) {
+      return {
+        toolResult: {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Error editing block: ${error.message}`
+          }]
+        }
+      };
+    }
+  },
+
+  mlss_reorder_blocks: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'mlss/v1/blocks/reorder', args);
+      return {
+        toolResult: {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(response, null, 2)
+          }]
+        }
+      };
+    } catch (error: any) {
+      return {
+        toolResult: {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Error reordering blocks: ${error.message}`
+          }]
+        }
+      };
+    }
+  },
+
+  mlss_delete_block: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'mlss/v1/blocks/delete', args);
+      return {
+        toolResult: {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(response, null, 2)
+          }]
+        }
+      };
+    } catch (error: any) {
+      return {
+        toolResult: {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Error deleting block: ${error.message}`
+          }]
+        }
+      };
+    }
+  },
+
+  mlss_create_contact: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'mlss/v1/contacts/create', args);
+      return {
+        toolResult: {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(response, null, 2)
+          }]
+        }
+      };
+    } catch (error: any) {
+      return {
+        toolResult: {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Error creating contact: ${error.message}`
+          }]
+        }
+      };
+    }
+  },
+
+  mlss_get_revisions: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', 'mlss/v1/revisions');
+      return {
+        toolResult: {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(response, null, 2)
+          }]
+        }
+      };
+    } catch (error: any) {
+      return {
+        toolResult: {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Error getting revisions: ${error.message}`
+          }]
+        }
+      };
+    }
+  },
+
+  mlss_restore_revision: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'mlss/v1/restore-revision', args);
+      return {
+        toolResult: {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(response, null, 2)
+          }]
+        }
+      };
+    } catch (error: any) {
+      return {
+        toolResult: {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Error restoring revision: ${error.message}`
+          }]
+        }
+      };
+    }
+  },
+
+  mlss_save_revision: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'mlss/v1/save-revision', args);
+      return {
+        toolResult: {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(response, null, 2)
+          }]
+        }
+      };
+    } catch (error: any) {
+      return {
+        toolResult: {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Error saving revision: ${error.message}`
           }]
         }
       };

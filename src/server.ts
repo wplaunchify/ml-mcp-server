@@ -73,15 +73,26 @@ for (const tool of allTools) {
     }
     
     const wrappedHandler = async (args: any) => {
-        // The handler functions are already typed with their specific parameter types
-        const result = await handler(args);
-        return {
-            content: result.toolResult.content.map((item: { type: string; text: string }) => ({
-                ...item,
-                type: "text" as const
-            })),
-            isError: result.toolResult.isError
-        };
+        try {
+            // The handler functions are already typed with their specific parameter types
+            const result = await handler(args);
+            return {
+                content: result.toolResult.content.map((item: { type: string; text: string }) => ({
+                    ...item,
+                    type: "text" as const
+                })),
+                isError: result.toolResult.isError
+            };
+        } catch (error: any) {
+            // Return error as tool result instead of throwing
+            return {
+                content: [{
+                    type: "text" as const,
+                    text: `Error executing ${tool.name}: ${error.message || String(error)}`
+                }],
+                isError: true
+            };
+        }
     };
     
     // console.log(`Registering tool: ${tool.name}`);
@@ -132,7 +143,7 @@ async function main() {
     }
 }
 
-// Handle process signals and errors
+// Handle process signals gracefully
 process.on('SIGTERM', () => {
     console.log('Received SIGTERM signal, shutting down...');
     process.exit(0);
@@ -141,13 +152,15 @@ process.on('SIGINT', () => {
     console.log('Received SIGINT signal, shutting down...');
     process.exit(0);
 });
+
+// Log errors but don't kill the server - let MCP SDK handle tool errors gracefully
 process.on('uncaughtException', (error) => {
     console.error('Uncaught exception:', error);
-    process.exit(1);
+    // Don't exit - let the server continue running
 });
 process.on('unhandledRejection', (error) => {
     console.error('Unhandled rejection:', error);
-    process.exit(1);
+    // Don't exit - let the server continue running
 });
 
 main().catch((error) => {
