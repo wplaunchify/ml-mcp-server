@@ -2,6 +2,94 @@
 
 All notable changes to the `@wplaunchify/ml-mcp-server` package will be documented in this file.
 
+## [2.5.8] - 2026-01-01
+
+### Fixed - Critical: Non-Blocking Plugin Detection ⚡
+
+- **Added 3-second timeout** to plugin detection to prevent server startup hangs
+- **Added `SKIP_PLUGIN_DETECTION` env var** to bypass detection entirely if needed
+- **Prevents Claude Desktop crashes** when WordPress API is slow or requires authentication
+- Plugin detection now fails gracefully and falls back to loading all tools
+
+### Technical Details
+
+- Plugin detection now uses `Promise.race()` with 3-second timeout
+- If detection times out or fails, server loads all tools (safe fallback)
+- Added `SKIP_PLUGIN_DETECTION=true` environment variable for emergency bypass
+- Improved logging to show when detection is skipped or times out
+
+### Why This Was Needed
+
+v2.5.7 introduced plugin detection that made HTTP requests during server startup. This could cause:
+- ❌ Claude Desktop to hang if WordPress API was slow
+- ❌ Server startup failures if `/wp/v2/plugins` endpoint required special auth
+- ❌ Timeout issues when multiple servers started simultaneously
+
+v2.5.8 fixes this by:
+- ✅ Adding timeout to prevent indefinite blocking
+- ✅ Graceful fallback if detection fails
+- ✅ Optional bypass via environment variable
+
+### Backward Compatibility
+
+✅ 100% backward compatible - all existing configurations work without changes.
+
+---
+
+## [2.5.7] - 2026-01-01
+
+### Fixed - Graceful Plugin Detection Restored 🎯
+
+- **Restored graceful plugin detection** that was removed in v2.5.6
+- Server now detects which plugins are installed and only loads relevant tools
+- **No more scary red error messages** when plugins aren't installed
+- Clean connection experience - users only see tools for plugins they have
+
+### Technical Details
+
+- Added `getFilteredToolsAsync()` function that detects installed plugins via WordPress REST API
+- Added `getFilteredHandlersAsync()` function to match handlers with loaded tools
+- Updated `server.ts` to use async tool loading during initialization
+- Plugin detection happens at startup when `ENABLED_TOOLS='all'` or not set
+- Falls back to loading all tools if detection fails (safe default)
+- Specific `ENABLED_TOOLS` values (wordpress, fluentcart, etc.) bypass detection
+
+### Plugin Detection Logic
+
+- WordPress tools: Always loaded (core functionality)
+- FluentCommunity tools: Only if `fluent-community` or `fluentcommunity` plugin detected
+- FluentCart tools: Only if `fluent-cart`, `fluentcart`, or `wp-payment-form` plugin detected
+- FluentCRM tools: Only if `fluent-crm` or `fluentcrm` plugin detected
+- ML Plugins tools: Only if `ml-image-editor`, `ml-media-hub`, or `fluent-affiliate` detected
+- Pro tools: Only if `fluent-mcp-pro` or `fluentmcp-pro` plugin detected
+- Debug tools: Always loaded
+
+### User Impact
+
+**Before (v2.5.6):**
+- ⚠️ Red error messages for missing plugins
+- 😱 Users thought something was broken
+- 📞 Increased support requests
+
+**After (v2.5.7):**
+- ✅ Clean connection with no errors
+- 😊 Only relevant tools shown
+- 🎯 Professional user experience
+
+### Backward Compatibility
+
+✅ 100% backward compatible - all existing configurations work without changes.
+
+### Preserved Features
+
+- ✅ All ML Simple Site v4.0.4 tools (11 tools including revision management)
+- ✅ All FluentMCP Pro tools (63 tools)
+- ✅ All existing tool categories and handlers
+- ✅ `ENABLED_TOOLS` environment variable filtering
+- ✅ Multiple server configurations
+
+---
+
 ## [2.5.0] - 2025-12-27
 
 ### Added - FluentMCP Pro Support 🎉

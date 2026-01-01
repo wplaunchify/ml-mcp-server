@@ -95,20 +95,6 @@ for (const tool of allTools) {
         }
     };
     
-    // console.log(`Registering tool: ${tool.name}`);
-    // console.log(`Input schema: ${JSON.stringify(tool.inputSchema)}`);
-
-    // const zodSchema = z.any().optional();
-    // const jsonSchema = zodToJsonSchema(z.object(tool.inputSchema.properties as z.ZodRawShape));
-
-    // const schema = z.object(tool.inputSchema as z.ZodRawShape).catchall(z.unknown());
-    
-    // The inputSchema is already in JSON Schema format with properties
-    // server.tool(tool.name, tool.inputSchema.shape, wrappedHandler);
-    // const zodSchema = z.any().optional();
-    // const jsonSchema = zodToJsonSchema(z.object(tool.inputSchema.properties as z.ZodRawShape));
-    // const parsedSchema = z.any().optional().parse(jsonSchema);
-
     const zodSchema = z.object(tool.inputSchema.properties as z.ZodRawShape); 
     server.tool(tool.name, zodSchema.shape, wrappedHandler);
     registeredCount++;

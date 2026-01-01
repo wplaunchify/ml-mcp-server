@@ -138,46 +138,39 @@ const handlerCategories = {
 function getFilteredTools(): Tool[] {
   const enabledTools = process.env.ENABLED_TOOLS?.toLowerCase();
   
-  if (!enabledTools || enabledTools === 'all') {
-    // No filter or 'all' - load all tools
-    return [
-      ...toolCategories.wordpress,
-      ...toolCategories.fluentcommunity,
-      ...toolCategories.fluentcart,
-      ...toolCategories.fluentcrm,
-      ...toolCategories.mlplugins,
-      ...toolCategories.pro,
-      ...toolCategories.debug
-    ];
+  // If specific category requested, honor it
+  if (enabledTools && enabledTools !== 'all') {
+    // Map user-friendly names to internal category names
+    const categoryMap: Record<string, keyof typeof toolCategories> = {
+      'wordpress': 'wordpress',
+      'fluent-community': 'fluentcommunity',
+      'fluentcommunity': 'fluentcommunity',
+      'fluentcommunity-core': 'fluentcommunity-core',
+      'fluent-community-core': 'fluentcommunity-core',
+      'fluentcommunity-learning': 'fluentcommunity-learning',
+      'fluent-community-learning': 'fluentcommunity-learning',
+      'fluent-cart': 'fluentcart',
+      'fluentcart': 'fluentcart',
+      'fluent-crm': 'fluentcrm',
+      'fluentcrm': 'fluentcrm',
+      'mlplugins': 'mlplugins',
+      'pro': 'pro',
+      'fluentmcp-pro': 'pro',
+      'fluent-mcp-pro': 'pro',
+      'debug': 'debug'
+    };
+    
+    const category = categoryMap[enabledTools];
+    if (category && toolCategories[category]) {
+      console.error(`📦 Loading only: ${enabledTools} (${toolCategories[category].length} tools)`);
+      return toolCategories[category];
+    }
+    
+    console.error(`⚠️  Unknown ENABLED_TOOLS value: ${enabledTools}. Loading all tools.`);
   }
   
-  // Map user-friendly names to internal category names
-  const categoryMap: Record<string, keyof typeof toolCategories> = {
-    'wordpress': 'wordpress',
-    'fluent-community': 'fluentcommunity',
-    'fluentcommunity': 'fluentcommunity',
-    'fluentcommunity-core': 'fluentcommunity-core',
-    'fluent-community-core': 'fluentcommunity-core',
-    'fluentcommunity-learning': 'fluentcommunity-learning',
-    'fluent-community-learning': 'fluentcommunity-learning',
-    'fluent-cart': 'fluentcart',
-    'fluentcart': 'fluentcart',
-    'fluent-crm': 'fluentcrm',
-    'fluentcrm': 'fluentcrm',
-    'mlplugins': 'mlplugins',
-    'pro': 'pro',
-    'fluentmcp-pro': 'pro',
-    'fluent-mcp-pro': 'pro',
-    'debug': 'debug'
-  };
-  
-  const category = categoryMap[enabledTools];
-  if (category && toolCategories[category]) {
-    console.error(`📦 Loading only: ${enabledTools} (${toolCategories[category].length} tools)`);
-    return toolCategories[category];
-  }
-  
-  console.error(`⚠️  Unknown ENABLED_TOOLS value: ${enabledTools}. Loading all tools.`);
+  // ENABLED_TOOLS not set or 'all' - load all tools
+  // No plugin detection during startup to prevent Claude Desktop crashes
   return [
     ...toolCategories.wordpress,
     ...toolCategories.fluentcommunity,
