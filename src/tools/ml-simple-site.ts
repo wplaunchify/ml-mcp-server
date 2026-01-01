@@ -122,6 +122,13 @@ export const mlSimpleSiteTools = [
     inputSchema: { type: 'object' as const, properties: {} },
   },
   {
+    name: 'mlss_get_revision_content',
+    description: 'Get full content of a specific revision (blocks, settings, metadata) WITHOUT restoring it. Perfect for previewing, comparing, or showing users what\'s in a revision before deciding to restore.',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      revision_index: z.number().describe('Index of revision to preview (get from mlss_get_revisions)'),
+    }).shape },
+  },
+  {
     name: 'mlss_restore_revision',
     description: 'Restore a specific revision by index. Automatically saves current state before restoring. Perfect for rolling back changes or A/B testing.',
     inputSchema: { type: 'object' as const, properties: z.object({
@@ -372,6 +379,30 @@ export const mlSimpleSiteHandlers = {
           content: [{
             type: 'text',
             text: `Error getting revisions: ${error.message}`
+          }]
+        }
+      };
+    }
+  },
+
+  mlss_get_revision_content: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', `mlss/v1/revision-content?revision_index=${args.revision_index}`);
+      return {
+        toolResult: {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(response, null, 2)
+          }]
+        }
+      };
+    } catch (error: any) {
+      return {
+        toolResult: {
+          isError: true,
+          content: [{
+            type: 'text',
+            text: `Error getting revision content: ${error.message}`
           }]
         }
       };
