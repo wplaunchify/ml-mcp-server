@@ -398,7 +398,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_list_categories: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'mediahub/v1/categories');
+      const response = await makeWordPressRequest('GET', 'mediahub/v1/media-categories');
       return {
         toolResult: {
           content: [{
@@ -422,7 +422,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_create_category: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'mediahub/v1/categories', args);
+      const response = await makeWordPressRequest('POST', 'mediahub/v1/media-categories', args);
       return {
         toolResult: {
           content: [{
