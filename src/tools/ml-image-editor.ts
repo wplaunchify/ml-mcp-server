@@ -78,9 +78,11 @@ export const mlImageEditorTools = [
 ];
 
 export const mlImageEditorHandlers = {
+  // All handlers now use FluentMCP proxy at fc-manager/v1/image-editor/* for unified authentication
+  
   mlimg_generate: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'ml-image/v1/generate', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/image-editor/generate', args);
       return {
         toolResult: {
           content: [{
@@ -104,7 +106,7 @@ export const mlImageEditorHandlers = {
 
   mlimg_edit: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'ml-image/v1/edit', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/image-editor/edit', args);
       return {
         toolResult: {
           content: [{
@@ -128,7 +130,7 @@ export const mlImageEditorHandlers = {
 
   mlimg_iterate: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'ml-image/v1/iterate', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/image-editor/iterate', args);
       return {
         toolResult: {
           content: [{
@@ -152,7 +154,7 @@ export const mlImageEditorHandlers = {
 
   mlimg_batch_generate: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'ml-image/v1/batch-generate', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/image-editor/batch-generate', args);
       return {
         toolResult: {
           content: [{
@@ -176,7 +178,7 @@ export const mlImageEditorHandlers = {
 
   mlimg_list_images: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'ml-image/v1/ai-images', args);
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/image-editor/images', args);
       return {
         toolResult: {
           content: [{
@@ -200,7 +202,7 @@ export const mlImageEditorHandlers = {
 
   mlimg_get_history: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `ml-image/v1/ai-images/${args.id}/history`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/image-editor/images/${args.id}/history`);
       return {
         toolResult: {
           content: [{
@@ -224,7 +226,7 @@ export const mlImageEditorHandlers = {
 
   mlimg_list_categories: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'ml-image/v1/categories');
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/image-editor/categories');
       return {
         toolResult: {
           content: [{
@@ -248,7 +250,7 @@ export const mlImageEditorHandlers = {
 
   mlimg_health: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'ml-image/v1/health');
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/image-editor/health');
       return {
         toolResult: {
           content: [{

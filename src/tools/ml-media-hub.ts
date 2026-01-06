@@ -134,9 +134,11 @@ export const mlMediaHubTools = [
 // ============================================================================
 
 export const mlMediaHubHandlers = {
+  // All handlers now use FluentMCP proxy at fc-manager/v1/mediahub/* for unified authentication
+  
   mlmh_search_images: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'mediahub/v1/search-images', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/mediahub/search-images', args);
       return {
         toolResult: {
           content: [{
@@ -160,7 +162,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_import_images: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'mediahub/v1/import-images', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/mediahub/import-images', args);
       return {
         toolResult: {
           content: [{
@@ -184,7 +186,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_search_icons: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'mediahub/v1/noun-search', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/mediahub/search-icons', args);
       return {
         toolResult: {
           content: [{
@@ -208,7 +210,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_import_icon: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'mediahub/v1/noun-import', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/mediahub/import-icon', args);
       return {
         toolResult: {
           content: [{
@@ -239,7 +241,7 @@ export const mlMediaHubHandlers = {
       if (args.search) params.append('search', args.search);
       
       const query = params.toString();
-      const response = await makeWordPressRequest('GET', `mediahub/v1/media${query ? '?' + query : ''}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/mediahub/media${query ? '?' + query : ''}`);
       return {
         toolResult: {
           content: [{
@@ -263,7 +265,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_list_categories: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'mediahub/v1/media-categories');
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/mediahub/categories');
       return {
         toolResult: {
           content: [{
@@ -287,7 +289,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_create_category: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'mediahub/v1/media-categories', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/mediahub/categories', args);
       return {
         toolResult: {
           content: [{
@@ -311,7 +313,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_get_settings: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'mediahub/v1/settings');
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/mediahub/settings');
       return {
         toolResult: {
           content: [{
@@ -335,7 +337,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_update_settings: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'mediahub/v1/settings', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/mediahub/settings', args);
       return {
         toolResult: {
           content: [{
@@ -359,7 +361,7 @@ export const mlMediaHubHandlers = {
 
   mlmh_get_info: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'mediahub/v1/info');
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/mediahub/info');
       return {
         toolResult: {
           content: [{
