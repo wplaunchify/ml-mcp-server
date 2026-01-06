@@ -38,7 +38,9 @@ const toolCategories = {
     ...pluginRepositoryTools,
     ...commentTools,
     ...mlCanvasTools,
-    ...mlSimpleSiteTools
+    ...mlSimpleSiteTools,
+    ...mlImageEditorTools,  // AI image generation via ML Image Editor
+    ...mlMediaHubTools      // Image search & icon import via ML Media Hub P2P
   ],
   // Full FluentCommunity (91 tools) - legacy support
   fluentcommunity: [
@@ -83,7 +85,7 @@ const toolCategories = {
 };
 
 const handlerCategories = {
-  // WP (ENABLED_TOOLS=wordpress) - 45 tools
+  // WP (ENABLED_TOOLS=wordpress) - 45+ tools (includes ML Image Editor & Media Hub)
   wordpress: {
     ...unifiedContentHandlers,
     ...unifiedTaxonomyHandlers,
@@ -92,8 +94,10 @@ const handlerCategories = {
     ...userHandlers,
     ...pluginRepositoryHandlers,
     ...commentHandlers,
-    ...mlCanvasHandlers,  // ML Canvas is part of WordPress category
-    ...mlSimpleSiteHandlers  // ML Simple Site tools
+    ...mlCanvasHandlers,       // ML Canvas Block tools
+    ...mlSimpleSiteHandlers,   // ML Simple Site tools
+    ...mlImageEditorHandlers,  // AI image generation
+    ...mlMediaHubHandlers      // Image search & icon import
   },
   fluentcommunity: {
     ...fluentCommunityHandlers,
