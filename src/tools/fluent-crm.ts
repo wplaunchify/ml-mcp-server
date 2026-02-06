@@ -121,6 +121,52 @@ export const fluentCRMTools: Tool[] = [
     inputSchema: { type: 'object' as const, properties: z.object({ id: z.number() }).shape }
   },
   
+  // Contact Tag Management
+  {
+    name: 'fcrm_get_contact_tags',
+    description: 'Get all tags attached to a FluentCRM contact',
+    inputSchema: { type: 'object' as const, properties: z.object({ id: z.number() }).shape }
+  },
+  {
+    name: 'fcrm_attach_tags',
+    description: 'Attach tags to an existing FluentCRM contact',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      id: z.number(),
+      tags: z.array(z.number()),
+    }).shape }
+  },
+  {
+    name: 'fcrm_detach_tags',
+    description: 'Remove tags from a FluentCRM contact',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      id: z.number(),
+      tags: z.array(z.number()),
+    }).shape }
+  },
+  
+  // Contact List Management
+  {
+    name: 'fcrm_get_contact_lists',
+    description: 'Get all lists a FluentCRM contact belongs to',
+    inputSchema: { type: 'object' as const, properties: z.object({ id: z.number() }).shape }
+  },
+  {
+    name: 'fcrm_attach_lists',
+    description: 'Add a FluentCRM contact to lists',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      id: z.number(),
+      lists: z.array(z.number()),
+    }).shape }
+  },
+  {
+    name: 'fcrm_detach_lists',
+    description: 'Remove a FluentCRM contact from lists',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      id: z.number(),
+      lists: z.array(z.number()),
+    }).shape }
+  },
+  
   // List Management
   {
     name: 'fcrm_list_lists',
@@ -292,6 +338,66 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
   fcrm_delete_contact: async (args: any) => {
     try {
       const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/contacts/${args.id}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  // Contact Tag Management handlers
+  fcrm_get_contact_tags: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/contacts/${args.id}/tags`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_attach_tags: async (args: any) => {
+    try {
+      const { id, tags } = args;
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcrm/contacts/${id}/tags`, { tags });
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_detach_tags: async (args: any) => {
+    try {
+      const { id, tags } = args;
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/contacts/${id}/tags`, { tags });
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  // Contact List Management handlers
+  fcrm_get_contact_lists: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/contacts/${args.id}/lists`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_attach_lists: async (args: any) => {
+    try {
+      const { id, lists } = args;
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcrm/contacts/${id}/lists`, { lists });
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_detach_lists: async (args: any) => {
+    try {
+      const { id, lists } = args;
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/contacts/${id}/lists`, { lists });
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };

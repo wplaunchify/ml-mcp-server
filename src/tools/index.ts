@@ -26,6 +26,7 @@ import { fluentCommunityAdminTools, fluentCommunityAdminHandlers } from './fluen
 import { fluentCommunityCoreTools, fluentCommunityCoreHandlers } from './fluent-community-core.js';
 import { fluentCommunityLearningTools, fluentCommunityLearningHandlers } from './fluent-community-learning.js';
 import { fluentMcpProTools, fluentMcpProHandlers } from './fluent-mcp-pro.js';
+import { mlSocialTools, mlSocialHandlers } from './ml-social.js';
 
 // Tool categories for selective loading
 const toolCategories = {
@@ -40,7 +41,8 @@ const toolCategories = {
     ...mlCanvasTools,
     ...mlSimpleSiteTools,
     ...mlImageEditorTools,  // AI image generation via ML Image Editor
-    ...mlMediaHubTools      // Image search & icon import via ML Media Hub P2P
+    ...mlMediaHubTools,     // Image search & icon import via ML Media Hub P2P
+    ...mlSocialTools        // Social media publishing via ML Social
   ],
   // Full FluentCommunity (91 tools) - legacy support
   fluentcommunity: [
@@ -71,9 +73,8 @@ const toolCategories = {
   fluentcrm: [
     ...fluentCRMTools
   ],
+  // mlplugins - Only Fluent Affiliate (ML Image Editor & Media Hub are in wordpress category)
   mlplugins: [
-    ...mlImageEditorTools,
-    ...mlMediaHubTools,
     ...fluentAffiliateTools
   ],
   pro: [
@@ -85,7 +86,7 @@ const toolCategories = {
 };
 
 const handlerCategories = {
-  // WP (ENABLED_TOOLS=wordpress) - 45+ tools (includes ML Image Editor & Media Hub)
+  // WP (ENABLED_TOOLS=wordpress) - 45+ tools (includes ML Image Editor & Media Hub & Social)
   wordpress: {
     ...unifiedContentHandlers,
     ...unifiedTaxonomyHandlers,
@@ -97,7 +98,8 @@ const handlerCategories = {
     ...mlCanvasHandlers,       // ML Canvas Block tools
     ...mlSimpleSiteHandlers,   // ML Simple Site tools
     ...mlImageEditorHandlers,  // AI image generation
-    ...mlMediaHubHandlers      // Image search & icon import
+    ...mlMediaHubHandlers,     // Image search & icon import
+    ...mlSocialHandlers        // Social media publishing
   },
   fluentcommunity: {
     ...fluentCommunityHandlers,
@@ -125,9 +127,8 @@ const handlerCategories = {
   fluentcrm: {
     ...fluentCRMHandlers
   },
+  // mlplugins - Only Fluent Affiliate (ML Image Editor & Media Hub handlers are in wordpress category)
   mlplugins: {
-    ...mlImageEditorHandlers,
-    ...mlMediaHubHandlers,
     ...fluentAffiliateHandlers
   },
   pro: {
