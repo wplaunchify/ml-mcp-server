@@ -1,31 +1,47 @@
-# NEVER ADD CONDITIONAL TOOL LOADING
+# NEVER REMOVE THE ENABLED_TOOLS CATEGORY SYSTEM
 
 **Date:** February 10, 2026
-**Version Fixed:** 2.7.4
-**Severity:** Critical - all Pro tools (63 tools including WooCommerce) were completely invisible to every user
+**Version Broken:** 2.7.4 (fixed in 2.7.5)
+**Severity:** Critical - v2.7.4 crashed every MCP server on startup with duplicate tool errors
 
-## What Happened
+## The Architecture (DO NOT CHANGE)
 
-Someone added an `ENABLED_TOOLS` environment variable system to `src/tools/index.ts` that conditionally loaded tool categories based on a config value. The Pro tools (WooCommerce, file system, database, WP settings, system, WP-CLI) were put in a separate `pro` category. When `ENABLED_TOOLS=wordpress` was set (which is what all MCP configs use), the Pro tools were silently excluded. No error, no warning, just gone.
+The MCP server has 5 tool groups loaded via `ENABLED_TOOLS` env var. Each runs as a SEPARATE MCP server instance to stay under Cursor's 80-tool limit:
 
-On top of that, the WooCommerce handler endpoint paths in `fluent-mcp-pro.ts` used `/power/wc/` while the actual PHP plugin registers endpoints at `/power/woo/`. So even if someone got the tools to load by setting `ENABLED_TOOLS=all`, every WooCommerce API call would have returned a 404.
+1. **WP** (`ENABLED_TOOLS=wordpress`) - WordPress core + ML plugins + FluentMCP Pro
+2. **COMM1** (`ENABLED_TOOLS=fluentcommunity-core`) - Community Core (55 tools)
+3. **COMM2** (`ENABLED_TOOLS=fluentcommunity-learning`) - Learning & Admin (37 tools)
+4. **CART** (`ENABLED_TOOLS=fluentcart`) - FluentCart (49 tools)
+5. **CRM** (`ENABLED_TOOLS=fluentcrm`) - FluentCRM (30 tools)
 
-Two bugs stacked on top of each other. Nobody could use WooCommerce tools. Period.
+This is BY DESIGN. `fluent-community.ts` (legacy all-in-one) and `fluent-community-core.ts` + `fluent-community-learning.ts` (split modules) have OVERLAPPING tool names. They CANNOT be loaded together.
 
-## What Was Fixed
+## What Originally Went Wrong
 
-1. **Ripped out the entire ENABLED_TOOLS conditional loading system.** `index.ts` is now a flat list - all tools, all handlers, always loaded. No environment variables, no category maps, no filtering functions.
+Pro tools (WooCommerce, file system, database, etc.) were in a separate `pro` category but NOT included in the `wordpress` category. So when `ENABLED_TOOLS=wordpress`, Pro tools were silently excluded.
 
-2. **Fixed all WooCommerce endpoint paths** from `/power/wc/` to `/power/woo/` to match what the PHP plugin actually registers.
+Also, WooCommerce endpoint paths in `fluent-mcp-pro.ts` used `/power/wc/` but the PHP plugin registers at `/power/woo/`.
 
-3. **Fixed the admin documentation** in `fluent-mcp-pro.php` that also showed the wrong `/wc/` paths.
+## How I Made It Worse (v2.7.4)
+
+Instead of just adding Pro tools to the `wordpress` category (a 2-line fix), I ripped out the entire ENABLED_TOOLS system and loaded every module in a flat list. This caused `fluent-community.ts` and `fluent-community-core.ts` to both register `fc_list_posts` and dozens of other duplicate tool names. The MCP SDK threw `Tool fc_list_posts is already registered` and the server crashed on startup for EVERYONE.
+
+## The Actual Fix (v2.7.5)
+
+1. Restored the original `index.ts` with ENABLED_TOOLS intact
+2. Added `...fluentMcpProTools` and `...fluentMcpProHandlers` to the `wordpress` category
+3. Kept the `/wc/` to `/woo/` endpoint path fix in `fluent-mcp-pro.ts`
+
+That's it. Two additions to the wordpress category. Nothing else changed.
 
 ## Rules Going Forward
 
-1. **ALL tools load ALL the time.** No conditional loading. No environment variable filtering. No "categories" that silently exclude tools. If a tool exists in the codebase, it gets registered. Full stop.
+1. **NEVER remove the ENABLED_TOOLS category system.** It exists because of Cursor's 80-tool limit and because legacy/split modules have duplicate tool names.
 
-2. **Endpoint paths in the NPM server MUST match the PHP plugin.** Before adding or changing any handler, verify the actual `register_rest_route()` call in the PHP plugin. The PHP plugin is the source of truth for endpoint paths.
+2. **When adding new tools, add them to the appropriate category.** Pro tools go in `wordpress`. Community tools go in their respective COMM1/COMM2 split.
 
-3. **Never add "smart" loading systems** that try to reduce tool counts. The MCP client can handle all the tools. If there's ever a legitimate need to limit tools, that should be a user-facing configuration with loud warnings about what's being excluded, not a silent filter.
+3. **Endpoint paths in the NPM server MUST match the PHP plugin.** The PHP plugin `register_rest_route()` calls are the source of truth.
 
-4. **Test that tools actually appear** in the MCP client's tool list after publishing. If a tool is defined but doesn't show up, something is broken.
+4. **TEST the server startup with each ENABLED_TOOLS value before publishing.** Run: `ENABLED_TOOLS=wordpress node ./build/server.js` and verify no crashes.
+
+5. **NEVER make sweeping architectural changes to fix a small bug.** The fix was 2 lines. I turned it into a disaster.
