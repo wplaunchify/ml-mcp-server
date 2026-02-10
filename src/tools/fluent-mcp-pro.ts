@@ -1364,7 +1364,7 @@ export const fluentMcpProHandlers = {
   // WooCommerce Handlers
   pro_wc_product_list: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wc/products', args);
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/products', args);
       return {
         toolResult: {
           content: [{
@@ -1388,7 +1388,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_product_get: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/wc/products/${args.id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/woo/products/${args.id}`);
       return {
         toolResult: {
           content: [{
@@ -1412,7 +1412,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_product_create: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/wc/products', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/woo/products', args);
       return {
         toolResult: {
           content: [{
@@ -1436,7 +1436,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_product_update: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/power/wc/products/${args.id}`, args);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/power/woo/products/${args.id}`, args);
       return {
         toolResult: {
           content: [{
@@ -1460,7 +1460,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_product_delete: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/power/wc/products/${args.id}`, args);
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/power/woo/products/${args.id}`, args);
       return {
         toolResult: {
           content: [{
@@ -1484,7 +1484,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_order_list: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wc/orders', args);
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/orders', args);
       return {
         toolResult: {
           content: [{
@@ -1508,7 +1508,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_order_get: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/wc/orders/${args.id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/woo/orders/${args.id}`);
       return {
         toolResult: {
           content: [{
@@ -1532,7 +1532,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_order_update: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/power/wc/orders/${args.id}`, args);
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/power/woo/orders/${args.id}`, args);
       return {
         toolResult: {
           content: [{
@@ -1556,7 +1556,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_customer_list: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wc/customers', args);
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/customers', args);
       return {
         toolResult: {
           content: [{
@@ -1580,7 +1580,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_customer_get: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/wc/customers/${args.id}`);
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/woo/customers/${args.id}`);
       return {
         toolResult: {
           content: [{
@@ -1604,7 +1604,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_reports: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wc/reports', args);
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/reports', args);
       return {
         toolResult: {
           content: [{
@@ -1628,7 +1628,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_coupon_list: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wc/coupons', args);
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/coupons', args);
       return {
         toolResult: {
           content: [{
@@ -1652,7 +1652,7 @@ export const fluentMcpProHandlers = {
 
   pro_wc_coupon_create: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/wc/coupons', args);
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/woo/coupons', args);
       return {
         toolResult: {
           content: [{

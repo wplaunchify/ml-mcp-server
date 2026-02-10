@@ -28,217 +28,96 @@ import { fluentCommunityLearningTools, fluentCommunityLearningHandlers } from '.
 import { fluentMcpProTools, fluentMcpProHandlers } from './fluent-mcp-pro.js';
 import { mlSocialTools, mlSocialHandlers } from './ml-social.js';
 
-// Tool categories for selective loading
-const toolCategories = {
-  wordpress: [
-    ...unifiedContentTools,
-    ...unifiedTaxonomyTools,
-    ...pluginTools,
-    ...mediaTools,
-    ...userTools,
-    ...pluginRepositoryTools,
-    ...commentTools,
-    ...mlCanvasTools,
-    ...mlSimpleSiteTools,
-    ...mlImageEditorTools,  // AI image generation via ML Image Editor
-    ...mlMediaHubTools,     // Image search & icon import via ML Media Hub P2P
-    ...mlSocialTools        // Social media publishing via ML Social
-  ],
-  // Full FluentCommunity (91 tools) - legacy support
-  fluentcommunity: [
-    ...fluentCommunityTools,
-    ...fluentCommunityDesignTools,
-    ...fluentCommunityLayoutTools,
-    ...fluentCommunityChatTools,
-    ...fluentCommunityAdminTools
-  ],
-  // COMM1 - Community Core (55 tools) - posts, spaces, members, engagement
-  'fluentcommunity-core': [
-    ...fluentCommunityCoreTools,
-    ...fluentCommunityChatTools  // Chat is part of core community
-  ],
-  // COMM2 - Learning & Admin (36 tools) - courses, lessons, settings
-  'fluentcommunity-learning': [
-    ...fluentCommunityLearningTools,
-    ...fluentCommunityDesignTools,
-    ...fluentCommunityLayoutTools,
-    ...fluentCommunityAdminTools
-  ],
-  fluentcart: [
-    ...fluentCartTools,
-    ...fluentCartAnalyticsTools,
-    ...fluentCartLicensingTools,
-    ...fluentCartAdminTools
-  ],
-  fluentcrm: [
-    ...fluentCRMTools
-  ],
-  // mlplugins - Only Fluent Affiliate (ML Image Editor & Media Hub are in wordpress category)
-  mlplugins: [
-    ...fluentAffiliateTools
-  ],
-  pro: [
-    ...fluentMcpProTools
-  ],
-  debug: [
-    ...debugTools
-  ]
+// All tools - always loaded, no conditional filtering
+export const allTools: Tool[] = [
+  // WordPress Core
+  ...unifiedContentTools,
+  ...unifiedTaxonomyTools,
+  ...pluginTools,
+  ...mediaTools,
+  ...userTools,
+  ...pluginRepositoryTools,
+  ...commentTools,
+
+  // ML Plugins (Canvas, Simple Site, Image Editor, Media Hub, Social)
+  ...mlCanvasTools,
+  ...mlSimpleSiteTools,
+  ...mlImageEditorTools,
+  ...mlMediaHubTools,
+  ...mlSocialTools,
+
+  // FluentMCP Pro (WooCommerce, file system, database, WP settings, system, WP-CLI)
+  ...fluentMcpProTools,
+
+  // FluentCommunity
+  ...fluentCommunityTools,
+  ...fluentCommunityDesignTools,
+  ...fluentCommunityLayoutTools,
+  ...fluentCommunityChatTools,
+  ...fluentCommunityAdminTools,
+  ...fluentCommunityCoreTools,
+  ...fluentCommunityLearningTools,
+
+  // FluentCart
+  ...fluentCartTools,
+  ...fluentCartAnalyticsTools,
+  ...fluentCartLicensingTools,
+  ...fluentCartAdminTools,
+
+  // FluentCRM
+  ...fluentCRMTools,
+
+  // Fluent Affiliate
+  ...fluentAffiliateTools,
+
+  // Debug
+  ...debugTools
+];
+
+// All handlers - always loaded, no conditional filtering
+export const toolHandlers: Record<string, any> = {
+  // WordPress Core
+  ...unifiedContentHandlers,
+  ...unifiedTaxonomyHandlers,
+  ...pluginHandlers,
+  ...mediaHandlers,
+  ...userHandlers,
+  ...pluginRepositoryHandlers,
+  ...commentHandlers,
+
+  // ML Plugins
+  ...mlCanvasHandlers,
+  ...mlSimpleSiteHandlers,
+  ...mlImageEditorHandlers,
+  ...mlMediaHubHandlers,
+  ...mlSocialHandlers,
+
+  // FluentMCP Pro
+  ...fluentMcpProHandlers,
+
+  // FluentCommunity
+  ...fluentCommunityHandlers,
+  ...fluentCommunityDesignHandlers,
+  ...fluentCommunityLayoutHandlers,
+  ...fluentCommunityChatHandlers,
+  ...fluentCommunityAdminHandlers,
+  ...fluentCommunityCoreHandlers,
+  ...fluentCommunityLearningHandlers,
+
+  // FluentCart
+  ...fluentCartHandlers,
+  ...fluentCartAnalyticsHandlers,
+  ...fluentCartLicensingHandlers,
+  ...fluentCartAdminHandlers,
+
+  // FluentCRM
+  ...fluentCRMHandlers,
+
+  // Fluent Affiliate
+  ...fluentAffiliateHandlers,
+
+  // Debug
+  ...debugHandlers
 };
 
-const handlerCategories = {
-  // WP (ENABLED_TOOLS=wordpress) - 45+ tools (includes ML Image Editor & Media Hub & Social)
-  wordpress: {
-    ...unifiedContentHandlers,
-    ...unifiedTaxonomyHandlers,
-    ...pluginHandlers,
-    ...mediaHandlers,
-    ...userHandlers,
-    ...pluginRepositoryHandlers,
-    ...commentHandlers,
-    ...mlCanvasHandlers,       // ML Canvas Block tools
-    ...mlSimpleSiteHandlers,   // ML Simple Site tools
-    ...mlImageEditorHandlers,  // AI image generation
-    ...mlMediaHubHandlers,     // Image search & icon import
-    ...mlSocialHandlers        // Social media publishing
-  },
-  fluentcommunity: {
-    ...fluentCommunityHandlers,
-    ...fluentCommunityDesignHandlers,
-    ...fluentCommunityLayoutHandlers,
-    ...fluentCommunityChatHandlers,
-    ...fluentCommunityAdminHandlers
-  },
-  'fluentcommunity-core': {
-    ...fluentCommunityCoreHandlers,
-    ...fluentCommunityChatHandlers
-  },
-  'fluentcommunity-learning': {
-    ...fluentCommunityLearningHandlers,
-    ...fluentCommunityDesignHandlers,
-    ...fluentCommunityLayoutHandlers,
-    ...fluentCommunityAdminHandlers
-  },
-  fluentcart: {
-    ...fluentCartHandlers,
-    ...fluentCartAnalyticsHandlers,
-    ...fluentCartLicensingHandlers,
-    ...fluentCartAdminHandlers
-  },
-  fluentcrm: {
-    ...fluentCRMHandlers
-  },
-  // mlplugins - Only Fluent Affiliate (ML Image Editor & Media Hub handlers are in wordpress category)
-  mlplugins: {
-    ...fluentAffiliateHandlers
-  },
-  pro: {
-    ...fluentMcpProHandlers
-  },
-  debug: {
-    ...debugHandlers
-  }
-};
-
-// Filter tools based on ENABLED_TOOLS environment variable
-function getFilteredTools(): Tool[] {
-  const enabledTools = process.env.ENABLED_TOOLS?.toLowerCase();
-  
-  // If specific category requested, honor it
-  if (enabledTools && enabledTools !== 'all') {
-    // Map user-friendly names to internal category names
-    const categoryMap: Record<string, keyof typeof toolCategories> = {
-      'wordpress': 'wordpress',
-      'fluent-community': 'fluentcommunity',
-      'fluentcommunity': 'fluentcommunity',
-      'fluentcommunity-core': 'fluentcommunity-core',
-      'fluent-community-core': 'fluentcommunity-core',
-      'fluentcommunity-learning': 'fluentcommunity-learning',
-      'fluent-community-learning': 'fluentcommunity-learning',
-      'fluent-cart': 'fluentcart',
-      'fluentcart': 'fluentcart',
-      'fluent-crm': 'fluentcrm',
-      'fluentcrm': 'fluentcrm',
-      'mlplugins': 'mlplugins',
-      'pro': 'pro',
-      'fluentmcp-pro': 'pro',
-      'fluent-mcp-pro': 'pro',
-      'debug': 'debug'
-    };
-    
-    const category = categoryMap[enabledTools];
-    if (category && toolCategories[category]) {
-      console.error(`📦 Loading only: ${enabledTools} (${toolCategories[category].length} tools)`);
-      return toolCategories[category];
-    }
-    
-    console.error(`⚠️  Unknown ENABLED_TOOLS value: ${enabledTools}. Loading all tools.`);
-  }
-  
-  // ENABLED_TOOLS not set or 'all' - load all tools
-  // No plugin detection during startup to prevent Claude Desktop crashes
-  return [
-    ...toolCategories.wordpress,
-    ...toolCategories.fluentcommunity,
-    ...toolCategories.fluentcart,
-    ...toolCategories.fluentcrm,
-    ...toolCategories.mlplugins,
-    ...toolCategories.pro,
-    ...toolCategories.debug
-  ];
-}
-
-function getFilteredHandlers(): Record<string, any> {
-  const enabledTools = process.env.ENABLED_TOOLS?.toLowerCase();
-  
-  if (!enabledTools || enabledTools === 'all') {
-    // No filter or 'all' - load all handlers
-    return {
-      ...handlerCategories.wordpress,
-      ...handlerCategories.fluentcommunity,
-      ...handlerCategories.fluentcart,
-      ...handlerCategories.fluentcrm,
-      ...handlerCategories.mlplugins,
-      ...handlerCategories.pro,
-      ...handlerCategories.debug
-    };
-  }
-  
-  // Map user-friendly names to internal category names
-  const categoryMap: Record<string, keyof typeof handlerCategories> = {
-    'wordpress': 'wordpress',
-    'fluent-community': 'fluentcommunity',
-    'fluentcommunity': 'fluentcommunity',
-    'fluentcommunity-core': 'fluentcommunity-core',
-    'fluent-community-core': 'fluentcommunity-core',
-    'fluentcommunity-learning': 'fluentcommunity-learning',
-    'fluent-community-learning': 'fluentcommunity-learning',
-    'fluent-cart': 'fluentcart',
-    'fluentcart': 'fluentcart',
-    'fluent-crm': 'fluentcrm',
-    'fluentcrm': 'fluentcrm',
-    'mlplugins': 'mlplugins',
-    'pro': 'pro',
-    'fluentmcp-pro': 'pro',
-    'fluent-mcp-pro': 'pro',
-    'debug': 'debug'
-  };
-  
-  const category = categoryMap[enabledTools];
-  if (category && handlerCategories[category]) {
-    return handlerCategories[category];
-  }
-  
-  return {
-    ...handlerCategories.wordpress,
-    ...handlerCategories.fluentcommunity,
-    ...handlerCategories.fluentcart,
-    ...handlerCategories.fluentcrm,
-    ...handlerCategories.mlplugins,
-    ...handlerCategories.pro,
-    ...handlerCategories.debug
-  };
-}
-
-// Export filtered tools and handlers
-export const allTools: Tool[] = getFilteredTools();
-export const toolHandlers = getFilteredHandlers();
+console.error(`📦 Loaded ${allTools.length} tools`);
