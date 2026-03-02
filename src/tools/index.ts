@@ -177,14 +177,14 @@ function getFilteredTools(): Tool[] {
   }
   
   // ENABLED_TOOLS not set or 'all' - load all tools
-  // No plugin detection during startup to prevent Claude Desktop crashes
+  // NOTE: Do NOT include toolCategories.pro here — pro tools are already in wordpress category.
+  // Including both causes "Tool X is already registered" crash.
   return [
     ...toolCategories.wordpress,
     ...toolCategories.fluentcommunity,
     ...toolCategories.fluentcart,
     ...toolCategories.fluentcrm,
     ...toolCategories.mlplugins,
-    ...toolCategories.pro,
     ...toolCategories.debug
   ];
 }
@@ -193,14 +193,13 @@ function getFilteredHandlers(): Record<string, any> {
   const enabledTools = process.env.ENABLED_TOOLS?.toLowerCase();
   
   if (!enabledTools || enabledTools === 'all') {
-    // No filter or 'all' - load all handlers
+    // NOTE: Do NOT include handlerCategories.pro — pro handlers are already in wordpress category.
     return {
       ...handlerCategories.wordpress,
       ...handlerCategories.fluentcommunity,
       ...handlerCategories.fluentcart,
       ...handlerCategories.fluentcrm,
       ...handlerCategories.mlplugins,
-      ...handlerCategories.pro,
       ...handlerCategories.debug
     };
   }
@@ -236,7 +235,6 @@ function getFilteredHandlers(): Record<string, any> {
     ...handlerCategories.fluentcart,
     ...handlerCategories.fluentcrm,
     ...handlerCategories.mlplugins,
-    ...handlerCategories.pro,
     ...handlerCategories.debug
   };
 }
