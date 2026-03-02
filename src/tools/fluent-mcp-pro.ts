@@ -2,1725 +2,242 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { makeWordPressRequest } from '../wordpress.js';
 
-// FluentMCP Pro Tools - Advanced WordPress Management for Power Users
-// Requires: fluent-mcp-pro.php WordPress plugin
-// 63 tools across 10 categories
+// FluentMCP Pro - 64 tools across 8 categories
+// All names+endpoints verified against fluent-mcp-pro.php register_rest_routes()
 
-// ============================================================================
-// SCHEMA DEFINITIONS (Define schemas FIRST, then use .shape)
-// ============================================================================
+// ====== SCHEMAS ======
 
-// File System Schemas
-const fsReadSchema = z.object({
-  path: z.string().describe('File path relative to WordPress root or absolute path within allowed directories'),
-  encoding: z.enum(['utf8', 'base64']).optional().describe('File encoding (default: utf8)'),
-});
+const fsReadSchema = z.object({ path: z.string().describe('File path'), encoding: z.enum(['utf8','base64']).optional() });
+const fsWriteSchema = z.object({ path: z.string().describe('File path'), content: z.string().describe('Content'), encoding: z.enum(['utf8','base64']).optional() });
+const fsListSchema = z.object({ path: z.string().describe('Directory path'), recursive: z.boolean().optional() });
+const fsDeleteSchema = z.object({ path: z.string().describe('File path') });
+const fsMoveSchema = z.object({ source: z.string().describe('Source'), destination: z.string().describe('Destination') });
+const fsCopySchema = z.object({ source: z.string().describe('Source'), destination: z.string().describe('Destination') });
+const fsMkdirSchema = z.object({ path: z.string().describe('Directory path'), recursive: z.boolean().optional() });
 
-const fsWriteSchema = z.object({
-  path: z.string().describe('File path relative to WordPress root or absolute path within allowed directories'),
-  content: z.string().describe('File content to write'),
-  encoding: z.enum(['utf8', 'base64']).optional().describe('File encoding (default: utf8)'),
-});
+const dbQuerySchema = z.object({ query: z.string().describe('SQL query'), type: z.enum(['SELECT','INSERT','UPDATE','DELETE']).optional() });
+const dbBackupSchema = z.object({ tables: z.array(z.string()).optional() });
+const dbOptimizeSchema = z.object({ tables: z.array(z.string()).optional() });
+const dbTablesSchema = z.object({ prefix: z.string().optional() });
+const dbTableStructureSchema = z.object({ table: z.string().describe('Table name') });
+const dbTableInfoSchema = z.object({ table: z.string().describe('Table name') });
+const dbExportSqlSchema = z.object({ tables: z.array(z.string()).optional() });
+const dbImportSqlSchema = z.object({ sql: z.string().describe('SQL statements') });
 
-const fsListSchema = z.object({
-  path: z.string().describe('Directory path relative to WordPress root or absolute path within allowed directories'),
-  recursive: z.boolean().optional().describe('List subdirectories recursively (default: false)'),
-});
+const settingsGetOptionSchema = z.object({ option: z.string().describe('Option name') });
+const settingsUpdateOptionSchema = z.object({ option: z.string().describe('Option name'), value: z.any().describe('Value') });
+const settingsListOptionsSchema = z.object({ search: z.string().optional(), limit: z.number().optional() });
+const settingsEmptySchema = z.object({});
 
-const fsDeleteSchema = z.object({
-  path: z.string().describe('File path relative to WordPress root or absolute path within allowed directories'),
-});
-
-const fsMkdirSchema = z.object({
-  path: z.string().describe('Directory path relative to WordPress root or absolute path within allowed directories'),
-  recursive: z.boolean().optional().describe('Create parent directories if needed (default: true)'),
-});
-
-const fsMoveSchema = z.object({
-  source: z.string().describe('Source file path'),
-  destination: z.string().describe('Destination file path'),
-});
-
-const fsInfoSchema = z.object({
-  path: z.string().describe('File path relative to WordPress root or absolute path within allowed directories'),
-});
-
-// Database Schemas
-const dbQuerySchema = z.object({
-  query: z.string().describe('SQL query to execute'),
-  type: z.enum(['SELECT', 'INSERT', 'UPDATE', 'DELETE']).optional().describe('Query type (default: SELECT)'),
-});
-
-const dbBackupSchema = z.object({
-  tables: z.array(z.string()).optional().describe('Specific tables to backup (default: all tables)'),
-});
-
-const dbRestoreSchema = z.object({
-  file: z.string().describe('Path to SQL backup file to restore'),
-});
-
-const dbTableListSchema = z.object({
-  prefix: z.string().optional().describe('Filter tables by prefix (default: wp_)'),
-});
-
-const dbTableInfoSchema = z.object({
-  table: z.string().describe('Table name to get information about'),
-});
-
-const dbOptimizeSchema = z.object({
-  tables: z.array(z.string()).optional().describe('Specific tables to optimize (default: all tables)'),
-});
-
-const dbRepairSchema = z.object({
-  tables: z.array(z.string()).optional().describe('Specific tables to repair (default: all tables)'),
-});
-
-const dbExportSchema = z.object({
-  table: z.string().describe('Table name to export'),
-  format: z.enum(['csv', 'json']).optional().describe('Export format (default: csv)'),
-});
-
-// WordPress Settings Schemas
-const wpGetOptionSchema = z.object({
-  option: z.string().describe('Option name to retrieve'),
-});
-
-const wpSetOptionSchema = z.object({
-  option: z.string().describe('Option name to set'),
-  value: z.any().describe('Option value to set'),
-});
-
-const wpDeleteOptionSchema = z.object({
-  option: z.string().describe('Option name to delete'),
-});
-
-const wpListOptionsSchema = z.object({
-  search: z.string().optional().describe('Search term to filter options'),
-  limit: z.number().optional().describe('Number of options to return (default: 100)'),
-});
-
-const wpGetConstantsSchema = z.object({
-  search: z.string().optional().describe('Search term to filter constants'),
-});
-
-const wpGetEnvSchema = z.object({
-  key: z.string().optional().describe('Specific environment variable to get (default: all)'),
-});
-
-const wpSiteInfoSchema = z.object({
-  include_server: z.boolean().optional().describe('Include server information (default: false)'),
-});
-
-const wpGetPermalinksSchema = z.object({});
-
-const wpSetPermalinksSchema = z.object({
-  structure: z.string().describe('Permalink structure (e.g., /%postname%/)'),
-});
-
-const wpGetTimezoneSchema = z.object({});
-
-const wpSetTimezoneSchema = z.object({
-  timezone: z.string().describe('Timezone string (e.g., America/New_York)'),
-});
-
-const wpFlushCacheSchema = z.object({
-  type: z.enum(['all', 'object', 'transient']).optional().describe('Cache type to flush (default: all)'),
-});
-
-// Theme Management Schemas
 const themeListSchema = z.object({});
+const themeActivateSchema = z.object({ theme: z.string().describe('Theme slug') });
+const themeInstallSchema = z.object({ slug: z.string().describe('Theme slug from WordPress.org') });
+const themeDeleteSchema = z.object({ theme: z.string().describe('Theme slug to delete') });
+const themeSearchSchema = z.object({ search: z.string().optional(), tag: z.string().optional(), page: z.number().optional(), per_page: z.number().optional() });
+const themeUpdateSchema = z.object({ theme: z.string().describe('Theme slug to update') });
 
-const themeActivateSchema = z.object({
-  theme: z.string().describe('Theme slug to activate'),
-});
+const sysCronJobsSchema = z.object({});
+const sysRunCronSchema = z.object({ hook: z.string().describe('Cron hook name') });
+const sysTransientsSchema = z.object({});
+const sysSecurityScanSchema = z.object({});
+const sysPerformanceSchema = z.object({});
 
-const themeDeleteSchema = z.object({
-  theme: z.string().describe('Theme slug to delete'),
-});
+const configWpConfigSchema = z.object({});
+const configHtaccessSchema = z.object({ content: z.string().optional().describe('New content or omit to read') });
 
-// System Utilities Schemas
-const systemInfoSchema = z.object({});
+const wooProductListSchema = z.object({ per_page: z.number().optional(), page: z.number().optional(), search: z.string().optional(), status: z.enum(['publish','draft','pending']).optional() });
+const wooProductCreateSchema = z.object({ name: z.string(), type: z.enum(['simple','variable','grouped','external']).optional(), regular_price: z.string().optional(), description: z.string().optional() });
+const wooProductGetSchema = z.object({ id: z.number().describe('Product ID') });
+const wooProductUpdateSchema = z.object({ id: z.number(), name: z.string().optional(), regular_price: z.string().optional(), description: z.string().optional(), stock_quantity: z.number().optional() });
+const wooProductDeleteSchema = z.object({ id: z.number(), force: z.boolean().optional() });
+const wooOrderListSchema = z.object({ per_page: z.number().optional(), page: z.number().optional(), status: z.string().optional() });
+const wooOrderCreateSchema = z.object({ status: z.string().optional(), customer_id: z.number().optional() });
+const wooOrderGetSchema = z.object({ id: z.number().describe('Order ID') });
+const wooOrderUpdateSchema = z.object({ id: z.number(), status: z.string().optional(), customer_note: z.string().optional() });
+const wooOrderDeleteSchema = z.object({ id: z.number(), force: z.boolean().optional() });
+const wooOrderStatusSchema = z.object({ id: z.number(), status: z.string().describe('New status') });
+const wooCustomerListSchema = z.object({ per_page: z.number().optional(), page: z.number().optional(), search: z.string().optional() });
+const wooCustomerCreateSchema = z.object({ email: z.string(), first_name: z.string().optional(), last_name: z.string().optional() });
+const wooCustomerGetSchema = z.object({ id: z.number().describe('Customer ID') });
+const wooCustomerUpdateSchema = z.object({ id: z.number(), email: z.string().optional(), first_name: z.string().optional(), last_name: z.string().optional() });
+const wooCustomerDeleteSchema = z.object({ id: z.number(), force: z.boolean().optional() });
+const wooInventoryStockSchema = z.object({ product_id: z.number(), stock_quantity: z.number() });
+const wooLowStockSchema = z.object({ threshold: z.number().optional() });
+const wooCategoriesSchema = z.object({});
+const wooReportsSchema = z.object({ period: z.enum(['week','month','year']).optional() });
 
-const systemHealthSchema = z.object({});
-
-const systemLogsSchema = z.object({
-  lines: z.number().optional().describe('Number of log lines to return (default: 100)'),
-  type: z.enum(['error', 'debug', 'all']).optional().describe('Log type to retrieve (default: error)'),
-});
-
-const systemCronSchema = z.object({});
-
-const systemCronRunSchema = z.object({
-  hook: z.string().describe('Cron hook name to execute'),
-});
-
-// WooCommerce Schemas
-const wcProductListSchema = z.object({
-  per_page: z.number().optional().describe('Products per page (default: 10)'),
-  page: z.number().optional().describe('Page number (default: 1)'),
-  search: z.string().optional().describe('Search term'),
-  status: z.enum(['publish', 'draft', 'pending']).optional().describe('Product status'),
-});
-
-const wcProductGetSchema = z.object({
-  id: z.number().describe('Product ID'),
-});
-
-const wcProductCreateSchema = z.object({
-  name: z.string().describe('Product name'),
-  type: z.enum(['simple', 'variable', 'grouped', 'external']).optional().describe('Product type (default: simple)'),
-  regular_price: z.string().optional().describe('Regular price'),
-  description: z.string().optional().describe('Product description'),
-  short_description: z.string().optional().describe('Short description'),
-  categories: z.array(z.object({ id: z.number() })).optional().describe('Product categories'),
-  images: z.array(z.object({ src: z.string() })).optional().describe('Product images'),
-});
-
-const wcProductUpdateSchema = z.object({
-  id: z.number().describe('Product ID'),
-  name: z.string().optional().describe('Product name'),
-  regular_price: z.string().optional().describe('Regular price'),
-  description: z.string().optional().describe('Product description'),
-  short_description: z.string().optional().describe('Short description'),
-  stock_quantity: z.number().optional().describe('Stock quantity'),
-});
-
-const wcProductDeleteSchema = z.object({
-  id: z.number().describe('Product ID'),
-  force: z.boolean().optional().describe('Force delete (default: false)'),
-});
-
-const wcOrderListSchema = z.object({
-  per_page: z.number().optional().describe('Orders per page (default: 10)'),
-  page: z.number().optional().describe('Page number (default: 1)'),
-  status: z.string().optional().describe('Order status'),
-});
-
-const wcOrderGetSchema = z.object({
-  id: z.number().describe('Order ID'),
-});
-
-const wcOrderUpdateSchema = z.object({
-  id: z.number().describe('Order ID'),
-  status: z.string().optional().describe('Order status'),
-  customer_note: z.string().optional().describe('Customer note'),
-});
-
-const wcCustomerListSchema = z.object({
-  per_page: z.number().optional().describe('Customers per page (default: 10)'),
-  page: z.number().optional().describe('Page number (default: 1)'),
-  search: z.string().optional().describe('Search term'),
-});
-
-const wcCustomerGetSchema = z.object({
-  id: z.number().describe('Customer ID'),
-});
-
-const wcReportsSchema = z.object({
-  period: z.enum(['week', 'month', 'year']).optional().describe('Report period (default: week)'),
-});
-
-const wcCouponListSchema = z.object({
-  per_page: z.number().optional().describe('Coupons per page (default: 10)'),
-  page: z.number().optional().describe('Page number (default: 1)'),
-});
-
-const wcCouponCreateSchema = z.object({
-  code: z.string().describe('Coupon code'),
-  discount_type: z.enum(['percent', 'fixed_cart', 'fixed_product']).describe('Discount type'),
-  amount: z.string().describe('Discount amount'),
-  description: z.string().optional().describe('Coupon description'),
-  expiry_date: z.string().optional().describe('Expiry date (YYYY-MM-DD)'),
-});
-
-// WP-CLI Schemas
-const wpCliExecuteSchema = z.object({
-  command: z.string().describe('WP-CLI command to execute (without "wp" prefix)'),
-  args: z.array(z.string()).optional().describe('Command arguments'),
-});
-
+const wpCliExecuteSchema = z.object({ command: z.string().describe('WP-CLI command without wp prefix'), args: z.array(z.string()).optional() });
 const wpCliAvailableSchema = z.object({});
 
-// ============================================================================
-// TOOL DEFINITIONS (Use .shape from schemas defined above)
-// ============================================================================
+// ====== TOOL DEFINITIONS ======
 
 export const fluentMcpProTools: Tool[] = [
-  // File System Tools
-  {
-    name: 'pro_fs_read',
-    description: 'Read file contents from WordPress file system (restricted to WordPress root and uploads directory, 2MB limit)',
-    inputSchema: { type: 'object', properties: fsReadSchema.shape }
-  },
-  {
-    name: 'pro_fs_write',
-    description: 'Write or create file in WordPress file system (restricted to WordPress root and uploads directory)',
-    inputSchema: { type: 'object', properties: fsWriteSchema.shape }
-  },
-  {
-    name: 'pro_fs_list',
-    description: 'List directory contents in WordPress file system (restricted to WordPress root and uploads directory)',
-    inputSchema: { type: 'object', properties: fsListSchema.shape }
-  },
-  {
-    name: 'pro_fs_delete',
-    description: 'Delete file from WordPress file system (restricted to WordPress root and uploads directory)',
-    inputSchema: { type: 'object', properties: fsDeleteSchema.shape }
-  },
-  {
-    name: 'pro_fs_mkdir',
-    description: 'Create directory in WordPress file system (restricted to WordPress root and uploads directory)',
-    inputSchema: { type: 'object', properties: fsMkdirSchema.shape }
-  },
-  {
-    name: 'pro_fs_move',
-    description: 'Move or rename file in WordPress file system (restricted to WordPress root and uploads directory)',
-    inputSchema: { type: 'object', properties: fsMoveSchema.shape }
-  },
-  {
-    name: 'pro_fs_info',
-    description: 'Get file information (size, modified date, permissions)',
-    inputSchema: { type: 'object', properties: fsInfoSchema.shape }
-  },
-
-  // Database Tools
-  {
-    name: 'pro_db_query',
-    description: 'Execute direct SQL query on WordPress database (use with caution, requires manage_options capability)',
-    inputSchema: { type: 'object', properties: dbQuerySchema.shape }
-  },
-  {
-    name: 'pro_db_backup',
-    description: 'Create database backup (exports to SQL file in uploads directory)',
-    inputSchema: { type: 'object', properties: dbBackupSchema.shape }
-  },
-  {
-    name: 'pro_db_restore',
-    description: 'Restore database from backup file',
-    inputSchema: { type: 'object', properties: dbRestoreSchema.shape }
-  },
-  {
-    name: 'pro_db_table_list',
-    description: 'List all database tables',
-    inputSchema: { type: 'object', properties: dbTableListSchema.shape }
-  },
-  {
-    name: 'pro_db_table_info',
-    description: 'Get information about a specific database table',
-    inputSchema: { type: 'object', properties: dbTableInfoSchema.shape }
-  },
-  {
-    name: 'pro_db_optimize',
-    description: 'Optimize database tables',
-    inputSchema: { type: 'object', properties: dbOptimizeSchema.shape }
-  },
-  {
-    name: 'pro_db_repair',
-    description: 'Repair database tables',
-    inputSchema: { type: 'object', properties: dbRepairSchema.shape }
-  },
-  {
-    name: 'pro_db_export',
-    description: 'Export database table to CSV or JSON',
-    inputSchema: { type: 'object', properties: dbExportSchema.shape }
-  },
-
-  // WordPress Settings Tools
-  {
-    name: 'pro_wp_get_option',
-    description: 'Get WordPress option value',
-    inputSchema: { type: 'object', properties: wpGetOptionSchema.shape }
-  },
-  {
-    name: 'pro_wp_set_option',
-    description: 'Set WordPress option value',
-    inputSchema: { type: 'object', properties: wpSetOptionSchema.shape }
-  },
-  {
-    name: 'pro_wp_delete_option',
-    description: 'Delete WordPress option',
-    inputSchema: { type: 'object', properties: wpDeleteOptionSchema.shape }
-  },
-  {
-    name: 'pro_wp_list_options',
-    description: 'List WordPress options',
-    inputSchema: { type: 'object', properties: wpListOptionsSchema.shape }
-  },
-  {
-    name: 'pro_wp_get_constants',
-    description: 'Get WordPress constants',
-    inputSchema: { type: 'object', properties: wpGetConstantsSchema.shape }
-  },
-  {
-    name: 'pro_wp_get_env',
-    description: 'Get environment variables',
-    inputSchema: { type: 'object', properties: wpGetEnvSchema.shape }
-  },
-  {
-    name: 'pro_wp_site_info',
-    description: 'Get comprehensive WordPress site information',
-    inputSchema: { type: 'object', properties: wpSiteInfoSchema.shape }
-  },
-  {
-    name: 'pro_wp_get_permalinks',
-    description: 'Get permalink structure',
-    inputSchema: { type: 'object', properties: wpGetPermalinksSchema.shape }
-  },
-  {
-    name: 'pro_wp_set_permalinks',
-    description: 'Set permalink structure',
-    inputSchema: { type: 'object', properties: wpSetPermalinksSchema.shape }
-  },
-  {
-    name: 'pro_wp_get_timezone',
-    description: 'Get WordPress timezone',
-    inputSchema: { type: 'object', properties: wpGetTimezoneSchema.shape }
-  },
-  {
-    name: 'pro_wp_set_timezone',
-    description: 'Set WordPress timezone',
-    inputSchema: { type: 'object', properties: wpSetTimezoneSchema.shape }
-  },
-  {
-    name: 'pro_wp_flush_cache',
-    description: 'Flush WordPress cache',
-    inputSchema: { type: 'object', properties: wpFlushCacheSchema.shape }
-  },
-
-  // Theme Management Tools
-  {
-    name: 'pro_theme_list',
-    description: 'List all installed themes',
-    inputSchema: { type: 'object', properties: themeListSchema.shape }
-  },
-  {
-    name: 'pro_theme_activate',
-    description: 'Activate a theme',
-    inputSchema: { type: 'object', properties: themeActivateSchema.shape }
-  },
-  {
-    name: 'pro_theme_delete',
-    description: 'Delete a theme',
-    inputSchema: { type: 'object', properties: themeDeleteSchema.shape }
-  },
-
-  // System Utilities Tools
-  {
-    name: 'pro_system_info',
-    description: 'Get system information (PHP, MySQL, server details)',
-    inputSchema: { type: 'object', properties: systemInfoSchema.shape }
-  },
-  {
-    name: 'pro_system_health',
-    description: 'Get WordPress site health status',
-    inputSchema: { type: 'object', properties: systemHealthSchema.shape }
-  },
-  {
-    name: 'pro_system_logs',
-    description: 'Get WordPress error logs',
-    inputSchema: { type: 'object', properties: systemLogsSchema.shape }
-  },
-  {
-    name: 'pro_system_cron',
-    description: 'List scheduled cron jobs',
-    inputSchema: { type: 'object', properties: systemCronSchema.shape }
-  },
-  {
-    name: 'pro_system_cron_run',
-    description: 'Execute a cron job immediately',
-    inputSchema: { type: 'object', properties: systemCronRunSchema.shape }
-  },
-
-  // WooCommerce Tools
-  {
-    name: 'pro_wc_product_list',
-    description: 'List WooCommerce products',
-    inputSchema: { type: 'object', properties: wcProductListSchema.shape }
-  },
-  {
-    name: 'pro_wc_product_get',
-    description: 'Get WooCommerce product by ID',
-    inputSchema: { type: 'object', properties: wcProductGetSchema.shape }
-  },
-  {
-    name: 'pro_wc_product_create',
-    description: 'Create WooCommerce product',
-    inputSchema: { type: 'object', properties: wcProductCreateSchema.shape }
-  },
-  {
-    name: 'pro_wc_product_update',
-    description: 'Update WooCommerce product',
-    inputSchema: { type: 'object', properties: wcProductUpdateSchema.shape }
-  },
-  {
-    name: 'pro_wc_product_delete',
-    description: 'Delete WooCommerce product',
-    inputSchema: { type: 'object', properties: wcProductDeleteSchema.shape }
-  },
-  {
-    name: 'pro_wc_order_list',
-    description: 'List WooCommerce orders',
-    inputSchema: { type: 'object', properties: wcOrderListSchema.shape }
-  },
-  {
-    name: 'pro_wc_order_get',
-    description: 'Get WooCommerce order by ID',
-    inputSchema: { type: 'object', properties: wcOrderGetSchema.shape }
-  },
-  {
-    name: 'pro_wc_order_update',
-    description: 'Update WooCommerce order',
-    inputSchema: { type: 'object', properties: wcOrderUpdateSchema.shape }
-  },
-  {
-    name: 'pro_wc_customer_list',
-    description: 'List WooCommerce customers',
-    inputSchema: { type: 'object', properties: wcCustomerListSchema.shape }
-  },
-  {
-    name: 'pro_wc_customer_get',
-    description: 'Get WooCommerce customer by ID',
-    inputSchema: { type: 'object', properties: wcCustomerGetSchema.shape }
-  },
-  {
-    name: 'pro_wc_reports',
-    description: 'Get WooCommerce sales reports',
-    inputSchema: { type: 'object', properties: wcReportsSchema.shape }
-  },
-  {
-    name: 'pro_wc_coupon_list',
-    description: 'List WooCommerce coupons',
-    inputSchema: { type: 'object', properties: wcCouponListSchema.shape }
-  },
-  {
-    name: 'pro_wc_coupon_create',
-    description: 'Create WooCommerce coupon',
-    inputSchema: { type: 'object', properties: wcCouponCreateSchema.shape }
-  },
-
-  // WP-CLI Tools
-  {
-    name: 'pro_wp_cli_execute',
-    description: 'Execute WP-CLI command',
-    inputSchema: { type: 'object', properties: wpCliExecuteSchema.shape }
-  },
-  {
-    name: 'pro_wp_cli_available',
-    description: 'Check if WP-CLI is available',
-    inputSchema: { type: 'object', properties: wpCliAvailableSchema.shape }
-  },
+  { name: 'pro_fs_read', description: 'Read file contents from WordPress file system (2MB limit)', inputSchema: { type: 'object' as const, properties: fsReadSchema.shape } },
+  { name: 'pro_fs_write', description: 'Write or create file in WordPress file system', inputSchema: { type: 'object' as const, properties: fsWriteSchema.shape } },
+  { name: 'pro_fs_list', description: 'List directory contents in WordPress file system', inputSchema: { type: 'object' as const, properties: fsListSchema.shape } },
+  { name: 'pro_fs_delete', description: 'Delete file from WordPress file system', inputSchema: { type: 'object' as const, properties: fsDeleteSchema.shape } },
+  { name: 'pro_fs_move', description: 'Move or rename file', inputSchema: { type: 'object' as const, properties: fsMoveSchema.shape } },
+  { name: 'pro_fs_copy', description: 'Copy a file', inputSchema: { type: 'object' as const, properties: fsCopySchema.shape } },
+  { name: 'pro_fs_mkdir', description: 'Create directory', inputSchema: { type: 'object' as const, properties: fsMkdirSchema.shape } },
+  { name: 'pro_db_query', description: 'Execute SQL query on WordPress database', inputSchema: { type: 'object' as const, properties: dbQuerySchema.shape } },
+  { name: 'pro_db_backup', description: 'Create database backup', inputSchema: { type: 'object' as const, properties: dbBackupSchema.shape } },
+  { name: 'pro_db_optimize', description: 'Optimize database tables', inputSchema: { type: 'object' as const, properties: dbOptimizeSchema.shape } },
+  { name: 'pro_db_tables', description: 'List all database tables', inputSchema: { type: 'object' as const, properties: dbTablesSchema.shape } },
+  { name: 'pro_db_table_structure', description: 'Get table column structure', inputSchema: { type: 'object' as const, properties: dbTableStructureSchema.shape } },
+  { name: 'pro_db_table_info', description: 'Get table row count and size', inputSchema: { type: 'object' as const, properties: dbTableInfoSchema.shape } },
+  { name: 'pro_db_export_sql', description: 'Export tables as SQL', inputSchema: { type: 'object' as const, properties: dbExportSqlSchema.shape } },
+  { name: 'pro_db_import_sql', description: 'Import and execute SQL', inputSchema: { type: 'object' as const, properties: dbImportSqlSchema.shape } },
+  { name: 'pro_settings_get_option', description: 'Get a WordPress option value', inputSchema: { type: 'object' as const, properties: settingsGetOptionSchema.shape } },
+  { name: 'pro_settings_update_option', description: 'Update a WordPress option', inputSchema: { type: 'object' as const, properties: settingsUpdateOptionSchema.shape } },
+  { name: 'pro_settings_list_options', description: 'List WordPress options', inputSchema: { type: 'object' as const, properties: settingsListOptionsSchema.shape } },
+  { name: 'pro_settings_general', description: 'Get or update general WordPress settings', inputSchema: { type: 'object' as const, properties: settingsEmptySchema.shape } },
+  { name: 'pro_settings_reading', description: 'Get or update reading settings', inputSchema: { type: 'object' as const, properties: settingsEmptySchema.shape } },
+  { name: 'pro_settings_writing', description: 'Get or update writing settings', inputSchema: { type: 'object' as const, properties: settingsEmptySchema.shape } },
+  { name: 'pro_settings_permalinks', description: 'Get or update permalink settings', inputSchema: { type: 'object' as const, properties: settingsEmptySchema.shape } },
+  { name: 'pro_settings_flush_permalinks', description: 'Flush and regenerate permalink rules', inputSchema: { type: 'object' as const, properties: settingsEmptySchema.shape } },
+  { name: 'pro_settings_clear_cache', description: 'Clear WordPress object and page cache', inputSchema: { type: 'object' as const, properties: settingsEmptySchema.shape } },
+  { name: 'pro_settings_customizer', description: 'Get or update theme customizer settings', inputSchema: { type: 'object' as const, properties: settingsEmptySchema.shape } },
+  { name: 'pro_settings_menus', description: 'List WordPress navigation menus', inputSchema: { type: 'object' as const, properties: settingsEmptySchema.shape } },
+  { name: 'pro_settings_widgets', description: 'List WordPress widget areas and widgets', inputSchema: { type: 'object' as const, properties: settingsEmptySchema.shape } },
+  { name: 'pro_theme_list', description: 'List all installed WordPress themes', inputSchema: { type: 'object' as const, properties: themeListSchema.shape } },
+  { name: 'pro_theme_activate', description: 'Activate an installed WordPress theme', inputSchema: { type: 'object' as const, properties: themeActivateSchema.shape } },
+  { name: 'pro_theme_install', description: 'Install a theme from WordPress.org repository', inputSchema: { type: 'object' as const, properties: themeInstallSchema.shape } },
+  { name: 'pro_theme_delete', description: 'Delete an installed WordPress theme', inputSchema: { type: 'object' as const, properties: themeDeleteSchema.shape } },
+  { name: 'pro_theme_search', description: 'Search the WordPress.org theme directory', inputSchema: { type: 'object' as const, properties: themeSearchSchema.shape } },
+  { name: 'pro_theme_update', description: 'Update a theme to its latest version', inputSchema: { type: 'object' as const, properties: themeUpdateSchema.shape } },
+  { name: 'pro_system_cron_jobs', description: 'List WordPress scheduled cron jobs', inputSchema: { type: 'object' as const, properties: sysCronJobsSchema.shape } },
+  { name: 'pro_system_run_cron', description: 'Manually trigger a cron hook', inputSchema: { type: 'object' as const, properties: sysRunCronSchema.shape } },
+  { name: 'pro_system_transients', description: 'List WordPress transients', inputSchema: { type: 'object' as const, properties: sysTransientsSchema.shape } },
+  { name: 'pro_system_security_scan', description: 'Run a WordPress security scan', inputSchema: { type: 'object' as const, properties: sysSecurityScanSchema.shape } },
+  { name: 'pro_system_performance', description: 'Get server and WordPress performance metrics', inputSchema: { type: 'object' as const, properties: sysPerformanceSchema.shape } },
+  { name: 'pro_config_wp_config', description: 'Read wp-config.php (sensitive values redacted)', inputSchema: { type: 'object' as const, properties: configWpConfigSchema.shape } },
+  { name: 'pro_config_htaccess', description: 'Read or update .htaccess file', inputSchema: { type: 'object' as const, properties: configHtaccessSchema.shape } },
+  { name: 'pro_woo_list_products', description: 'List WooCommerce products', inputSchema: { type: 'object' as const, properties: wooProductListSchema.shape } },
+  { name: 'pro_woo_create_product', description: 'Create a WooCommerce product', inputSchema: { type: 'object' as const, properties: wooProductCreateSchema.shape } },
+  { name: 'pro_woo_get_product', description: 'Get a WooCommerce product by ID', inputSchema: { type: 'object' as const, properties: wooProductGetSchema.shape } },
+  { name: 'pro_woo_update_product', description: 'Update a WooCommerce product', inputSchema: { type: 'object' as const, properties: wooProductUpdateSchema.shape } },
+  { name: 'pro_woo_delete_product', description: 'Delete a WooCommerce product', inputSchema: { type: 'object' as const, properties: wooProductDeleteSchema.shape } },
+  { name: 'pro_woo_list_orders', description: 'List WooCommerce orders', inputSchema: { type: 'object' as const, properties: wooOrderListSchema.shape } },
+  { name: 'pro_woo_create_order', description: 'Create a WooCommerce order', inputSchema: { type: 'object' as const, properties: wooOrderCreateSchema.shape } },
+  { name: 'pro_woo_get_order', description: 'Get a WooCommerce order by ID', inputSchema: { type: 'object' as const, properties: wooOrderGetSchema.shape } },
+  { name: 'pro_woo_update_order', description: 'Update a WooCommerce order', inputSchema: { type: 'object' as const, properties: wooOrderUpdateSchema.shape } },
+  { name: 'pro_woo_delete_order', description: 'Delete a WooCommerce order', inputSchema: { type: 'object' as const, properties: wooOrderDeleteSchema.shape } },
+  { name: 'pro_woo_update_order_status', description: 'Update order status', inputSchema: { type: 'object' as const, properties: wooOrderStatusSchema.shape } },
+  { name: 'pro_woo_list_customers', description: 'List WooCommerce customers', inputSchema: { type: 'object' as const, properties: wooCustomerListSchema.shape } },
+  { name: 'pro_woo_create_customer', description: 'Create a WooCommerce customer', inputSchema: { type: 'object' as const, properties: wooCustomerCreateSchema.shape } },
+  { name: 'pro_woo_get_customer', description: 'Get a WooCommerce customer by ID', inputSchema: { type: 'object' as const, properties: wooCustomerGetSchema.shape } },
+  { name: 'pro_woo_update_customer', description: 'Update a WooCommerce customer', inputSchema: { type: 'object' as const, properties: wooCustomerUpdateSchema.shape } },
+  { name: 'pro_woo_delete_customer', description: 'Delete a WooCommerce customer', inputSchema: { type: 'object' as const, properties: wooCustomerDeleteSchema.shape } },
+  { name: 'pro_woo_inventory_stock', description: 'Update product stock quantity', inputSchema: { type: 'object' as const, properties: wooInventoryStockSchema.shape } },
+  { name: 'pro_woo_low_stock', description: 'Get low stock products', inputSchema: { type: 'object' as const, properties: wooLowStockSchema.shape } },
+  { name: 'pro_woo_categories', description: 'List product categories', inputSchema: { type: 'object' as const, properties: wooCategoriesSchema.shape } },
+  { name: 'pro_woo_reports_sales', description: 'Get WooCommerce sales reports', inputSchema: { type: 'object' as const, properties: wooReportsSchema.shape } },
+  { name: 'pro_woo_reports_top_products', description: 'Get top selling products', inputSchema: { type: 'object' as const, properties: wooReportsSchema.shape } },
+  { name: 'pro_woo_reports_customers', description: 'Get customer reports', inputSchema: { type: 'object' as const, properties: wooReportsSchema.shape } },
+  { name: 'pro_wpcli_execute', description: 'Execute a WP-CLI command', inputSchema: { type: 'object' as const, properties: wpCliExecuteSchema.shape } },
+  { name: 'pro_wpcli_available', description: 'Check if WP-CLI is available', inputSchema: { type: 'object' as const, properties: wpCliAvailableSchema.shape } },
 ];
 
-// ============================================================================
-// HANDLERS
-// ============================================================================
+// Total: 64 tools
 
-export const fluentMcpProHandlers = {
-  // File System Handlers
-  pro_fs_read: async (args: any) => {
+// ====== HANDLER HELPERS ======
+
+function h(method: string, endpoint: string, errMsg: string) {
+  return async (args: any) => {
     try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/fs/read', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error reading file: ${error.message}`
-          }]
-        }
-      };
+      const r = await makeWordPressRequest(method as any, endpoint, args);
+      return { toolResult: { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }] } };
+    } catch (e: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text' as const, text: errMsg + ': ' + e.message }] } };
+    }
+  };
+}
+
+function hId(method: string, base: string, idField: string, errMsg: string) {
+  return async (args: any) => {
+    try {
+      const r = await makeWordPressRequest(method as any, base + '/' + args[idField], args);
+      return { toolResult: { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }] } };
+    } catch (e: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text' as const, text: errMsg + ': ' + e.message }] } };
+    }
+  };
+}
+
+// ====== HANDLERS - Endpoints match PHP register_rest_route() exactly ======
+
+export const fluentMcpProHandlers: Record<string, (args: any) => Promise<any>> = {
+  pro_fs_read: h('POST', 'fc-manager/v1/power/fs/read', 'Error reading file'),
+  pro_fs_write: h('POST', 'fc-manager/v1/power/fs/write', 'Error writing file'),
+  pro_fs_list: h('POST', 'fc-manager/v1/power/fs/list', 'Error listing directory'),
+  pro_fs_delete: h('POST', 'fc-manager/v1/power/fs/delete', 'Error deleting file'),
+  pro_fs_move: h('POST', 'fc-manager/v1/power/fs/move', 'Error moving file'),
+  pro_fs_copy: h('POST', 'fc-manager/v1/power/fs/copy', 'Error copying file'),
+  pro_fs_mkdir: h('POST', 'fc-manager/v1/power/fs/mkdir', 'Error creating directory'),
+  pro_db_query: h('POST', 'fc-manager/v1/power/db/query', 'Error executing query'),
+  pro_db_backup: h('POST', 'fc-manager/v1/power/db/backup', 'Error creating backup'),
+  pro_db_optimize: h('POST', 'fc-manager/v1/power/db/optimize', 'Error optimizing tables'),
+  pro_db_tables: h('GET', 'fc-manager/v1/power/db/tables', 'Error listing tables'),
+  pro_db_table_structure: h('POST', 'fc-manager/v1/power/db/table-structure', 'Error getting structure'),
+  pro_db_table_info: h('POST', 'fc-manager/v1/power/db/table-info', 'Error getting table info'),
+  pro_db_export_sql: h('POST', 'fc-manager/v1/power/db/export-sql', 'Error exporting SQL'),
+  pro_db_import_sql: h('POST', 'fc-manager/v1/power/db/import-sql', 'Error importing SQL'),
+  pro_settings_get_option: h('POST', 'fc-manager/v1/power/settings/get-option', 'Error getting option'),
+  pro_settings_update_option: h('POST', 'fc-manager/v1/power/settings/update-option', 'Error updating option'),
+  pro_settings_list_options: h('GET', 'fc-manager/v1/power/settings/list-options', 'Error listing options'),
+  pro_settings_general: h('GET', 'fc-manager/v1/power/settings/general', 'Error with general settings'),
+  pro_settings_reading: h('GET', 'fc-manager/v1/power/settings/reading', 'Error with reading settings'),
+  pro_settings_writing: h('GET', 'fc-manager/v1/power/settings/writing', 'Error with writing settings'),
+  pro_settings_permalinks: h('GET', 'fc-manager/v1/power/settings/permalinks', 'Error with permalinks'),
+  pro_settings_flush_permalinks: h('POST', 'fc-manager/v1/power/settings/flush-permalinks', 'Error flushing permalinks'),
+  pro_settings_clear_cache: h('POST', 'fc-manager/v1/power/settings/clear-cache', 'Error clearing cache'),
+  pro_settings_customizer: h('GET', 'fc-manager/v1/power/settings/customizer', 'Error with customizer'),
+  pro_settings_menus: h('GET', 'fc-manager/v1/power/settings/menus', 'Error listing menus'),
+  pro_settings_widgets: h('GET', 'fc-manager/v1/power/settings/widgets', 'Error listing widgets'),
+  pro_theme_list: h('GET', 'fc-manager/v1/power/themes/list', 'Error listing themes'),
+  pro_theme_activate: h('POST', 'fc-manager/v1/power/themes/activate', 'Error activating theme'),
+  pro_theme_install: h('POST', 'fc-manager/v1/power/themes/install', 'Error installing theme'),
+  pro_theme_delete: h('POST', 'fc-manager/v1/power/themes/delete', 'Error deleting theme'),
+  pro_theme_search: h('GET', 'fc-manager/v1/power/themes/search', 'Error searching themes'),
+  pro_theme_update: h('POST', 'fc-manager/v1/power/themes/update', 'Error updating theme'),
+  pro_system_cron_jobs: h('GET', 'fc-manager/v1/power/system/cron-jobs', 'Error listing cron jobs'),
+  pro_system_run_cron: h('POST', 'fc-manager/v1/power/system/run-cron', 'Error running cron'),
+  pro_system_transients: h('GET', 'fc-manager/v1/power/system/transients', 'Error listing transients'),
+  pro_system_security_scan: h('POST', 'fc-manager/v1/power/system/security-scan', 'Error running scan'),
+  pro_system_performance: h('GET', 'fc-manager/v1/power/system/performance', 'Error getting performance'),
+  pro_config_wp_config: h('GET', 'fc-manager/v1/power/config/wp-config', 'Error reading wp-config'),
+  pro_config_htaccess: h('GET', 'fc-manager/v1/power/config/htaccess', 'Error with htaccess'),
+  pro_woo_list_products: h('GET', 'fc-manager/v1/power/woo/products', 'Error listing products'),
+  pro_woo_create_product: h('POST', 'fc-manager/v1/power/woo/products', 'Error creating product'),
+  pro_woo_list_orders: h('GET', 'fc-manager/v1/power/woo/orders', 'Error listing orders'),
+  pro_woo_create_order: h('POST', 'fc-manager/v1/power/woo/orders', 'Error creating order'),
+  pro_woo_list_customers: h('GET', 'fc-manager/v1/power/woo/customers', 'Error listing customers'),
+  pro_woo_create_customer: h('POST', 'fc-manager/v1/power/woo/customers', 'Error creating customer'),
+  pro_woo_inventory_stock: h('POST', 'fc-manager/v1/power/woo/inventory/stock', 'Error updating stock'),
+  pro_woo_low_stock: h('GET', 'fc-manager/v1/power/woo/inventory/low-stock', 'Error getting low stock'),
+  pro_woo_categories: h('GET', 'fc-manager/v1/power/woo/categories', 'Error listing categories'),
+  pro_woo_reports_sales: h('GET', 'fc-manager/v1/power/woo/reports/sales', 'Error getting sales'),
+  pro_woo_reports_top_products: h('GET', 'fc-manager/v1/power/woo/reports/top-products', 'Error getting top products'),
+  pro_woo_reports_customers: h('GET', 'fc-manager/v1/power/woo/reports/customers', 'Error getting customer report'),
+  pro_wpcli_execute: h('POST', 'fc-manager/v1/power/wpcli/execute', 'Error executing WP-CLI'),
+  pro_wpcli_available: h('GET', 'fc-manager/v1/power/wpcli/available', 'Error checking WP-CLI'),
+  pro_woo_get_product: hId('GET', 'fc-manager/v1/power/woo/products', 'id', 'Error getting product'),
+  pro_woo_update_product: hId('PUT', 'fc-manager/v1/power/woo/products', 'id', 'Error updating product'),
+  pro_woo_delete_product: hId('DELETE', 'fc-manager/v1/power/woo/products', 'id', 'Error deleting product'),
+  pro_woo_get_order: hId('GET', 'fc-manager/v1/power/woo/orders', 'id', 'Error getting order'),
+  pro_woo_update_order: hId('PUT', 'fc-manager/v1/power/woo/orders', 'id', 'Error updating order'),
+  pro_woo_delete_order: hId('DELETE', 'fc-manager/v1/power/woo/orders', 'id', 'Error deleting order'),
+  pro_woo_update_order_status: async (args: any) => {
+    try {
+      const r = await makeWordPressRequest('POST' as any, `fc-manager/v1/power/woo/orders/${args.id}/status`, args);
+      return { toolResult: { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }] } };
+    } catch (e: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text' as const, text: 'Error updating status: ' + e.message }] } };
     }
   },
-
-  pro_fs_write: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/fs/write', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error writing file: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_fs_list: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/fs/list', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error listing directory: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_fs_delete: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/fs/delete', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error deleting file: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_fs_mkdir: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/fs/mkdir', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error creating directory: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_fs_move: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/fs/move', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error moving file: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_fs_info: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/fs/info', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting file info: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  // Database Handlers
-  pro_db_query: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/db/query', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error executing query: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_db_backup: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/db/backup', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error creating backup: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_db_restore: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/db/restore', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error restoring backup: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_db_table_list: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/db/tables', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error listing tables: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_db_table_info: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/db/tables/${args.table}`, args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting table info: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_db_optimize: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/db/optimize', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error optimizing tables: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_db_repair: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/db/repair', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error repairing tables: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_db_export: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/db/export', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error exporting table: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  // WordPress Settings Handlers
-  pro_wp_get_option: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/wp/options/${args.option}`);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting option: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_set_option: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/wp/options', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error setting option: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_delete_option: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/power/wp/options/${args.option}`);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error deleting option: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_list_options: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wp/options', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error listing options: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_get_constants: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wp/constants', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting constants: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_get_env: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wp/env', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting environment: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_site_info: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wp/site-info', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting site info: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_get_permalinks: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wp/permalinks');
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting permalinks: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_set_permalinks: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/wp/permalinks', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error setting permalinks: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_get_timezone: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wp/timezone');
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting timezone: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_set_timezone: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/wp/timezone', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error setting timezone: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_flush_cache: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/wp/flush-cache', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error flushing cache: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  // Theme Management Handlers
-  pro_theme_list: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/themes');
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error listing themes: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_theme_activate: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/themes/activate', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error activating theme: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_theme_delete: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/power/themes/${args.theme}`);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error deleting theme: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  // System Utilities Handlers
-  pro_system_info: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/system/info');
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting system info: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_system_health: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/system/health');
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting system health: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_system_logs: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/system/logs', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting logs: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_system_cron: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/system/cron');
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting cron jobs: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_system_cron_run: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/system/cron/run', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error running cron job: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  // WooCommerce Handlers
-  pro_wc_product_list: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/products', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error listing products: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_product_get: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/woo/products/${args.id}`);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting product: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_product_create: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/woo/products', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error creating product: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_product_update: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/power/woo/products/${args.id}`, args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error updating product: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_product_delete: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/power/woo/products/${args.id}`, args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error deleting product: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_order_list: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/orders', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error listing orders: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_order_get: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/woo/orders/${args.id}`);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting order: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_order_update: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('PUT', `fc-manager/v1/power/woo/orders/${args.id}`, args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error updating order: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_customer_list: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/customers', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error listing customers: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_customer_get: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', `fc-manager/v1/power/woo/customers/${args.id}`);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting customer: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_reports: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/reports', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error getting reports: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_coupon_list: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/woo/coupons', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error listing coupons: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wc_coupon_create: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/woo/coupons', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error creating coupon: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  // WP-CLI Handlers
-  pro_wp_cli_execute: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('POST', 'fc-manager/v1/power/wp-cli/execute', args);
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error executing WP-CLI command: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
-
-  pro_wp_cli_available: async (args: any) => {
-    try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/power/wp-cli/available');
-      return {
-        toolResult: {
-          content: [{
-            type: 'text',
-            text: JSON.stringify(response, null, 2)
-          }]
-        }
-      };
-    } catch (error: any) {
-      return {
-        toolResult: {
-          isError: true,
-          content: [{
-            type: 'text',
-            text: `Error checking WP-CLI availability: ${error.message}`
-          }]
-        }
-      };
-    }
-  },
+  pro_woo_get_customer: hId('GET', 'fc-manager/v1/power/woo/customers', 'id', 'Error getting customer'),
+  pro_woo_update_customer: hId('PUT', 'fc-manager/v1/power/woo/customers', 'id', 'Error updating customer'),
+  pro_woo_delete_customer: hId('DELETE', 'fc-manager/v1/power/woo/customers', 'id', 'Error deleting customer'),
 };
 
+// Verification: 64 tools, 64 handlers
