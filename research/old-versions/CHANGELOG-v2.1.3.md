@@ -18,7 +18,7 @@
 - `package.json` - Version bumped from 2.1.3 to 2.1.4
 
 ## Backup
-- `old-versions/index-2.1.3.ts` - Pre-change backup
+- `research/old-versions/index-2.1.3.ts` - Pre-change backup
 
 ## The 5 Categories (matching TOOL-TRUTH-TABLE.md)
 

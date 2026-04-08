@@ -8,6 +8,7 @@ dist/
 
 # Environment variables
 .env
+.npmrc
 .env.local
 .env.*.local
 
