@@ -1,6 +1,6 @@
 {
   "name": "@wplaunchify/ml-mcp-server",
-  "version": "2.7.9",
+  "version": "2.7.10",
   "description": "Universal MCP Server for WordPress + Fluent Suite (Community, CRM, Cart) + FluentMCP Pro. Comprehensive tools for AI-powered WordPress management via Claude, Cursor, and other MCP clients.",
   "type": "module",
   "main": "./build/server.js",
@@ -16,7 +16,8 @@
     "start": "node ./build/server.js",
     "dev": "tsx watch src/server.ts",
     "clean": "rimraf build",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "release": "node ./scripts/npm-with-token.mjs publish"
   },
   "keywords": [
     "wordpress",

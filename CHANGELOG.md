@@ -2,6 +2,14 @@
 
 All notable changes to the `@wplaunchify/ml-mcp-server` package will be documented in this file.
 
+## [2.7.10] - 2026-04-08
+
+### Added
+
+- **`npm run release`** — publishes using `NPM_TOKEN` from `.env` (no manual `source .env`). Same package contents as 2.7.9.
+
+---
+
 ## [2.7.9] - 2026-04-08
 
 ### Added
