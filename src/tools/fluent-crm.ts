@@ -10,12 +10,21 @@ import { makeWordPressRequest } from '../wordpress.js';
 
 // ==================== ZOD SCHEMA DEFINITIONS ====================
 
+const fluentCrmContactStatusSchema = z.enum([
+  'subscribed',
+  'pending',
+  'unsubscribed',
+  'bounced',
+  'complained',
+  'transactional',
+]);
+
 // Contact schemas
 const listContactsSchema = z.object({
   page: z.number().optional(),
   per_page: z.number().optional(),
   search: z.string().optional(),
-  status: z.enum(['subscribed', 'unsubscribed', 'bounced', 'complained']).optional(),
+  status: fluentCrmContactStatusSchema.optional(),
   tags: z.array(z.number()).optional(),
   lists: z.array(z.number()).optional(),
 });
@@ -24,10 +33,18 @@ const createContactSchema = z.object({
   email: z.string().email(),
   first_name: z.string().optional(),
   last_name: z.string().optional(),
-  status: z.enum(['subscribed', 'unsubscribed', 'pending']).optional(),
+  status: fluentCrmContactStatusSchema.optional(),
   tags: z.array(z.number()).optional(),
   lists: z.array(z.number()).optional(),
   custom_fields: z.record(z.any()).optional(),
+});
+
+const updateContactSchema = z.object({
+  id: z.number(),
+  email: z.string().email().optional(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  status: fluentCrmContactStatusSchema.optional(),
 });
 
 // List schemas
@@ -71,6 +88,18 @@ const createCampaignSchema = z.object({
   scheduled_at: z.string().optional(),
 });
 
+const campaignIdSchema = z.object({ id: z.number() });
+
+const campaignLinksSchema = z.object({
+  id: z.number(),
+  limit: z.number().int().positive().optional(),
+});
+
+const campaignClickersSchema = z.object({
+  id: z.number(),
+  include_contact: z.boolean().optional(),
+});
+
 // Template schemas
 const listTemplatesSchema = z.object({
   page: z.number().optional(),
@@ -107,13 +136,7 @@ export const fluentCRMTools: Tool[] = [
   {
     name: 'fcrm_update_contact',
     description: 'Update an existing FluentCRM contact',
-    inputSchema: { type: 'object' as const, properties: z.object({
-      id: z.number(),
-      email: z.string().email().optional(),
-      first_name: z.string().optional(),
-      last_name: z.string().optional(),
-      status: z.enum(['subscribed', 'unsubscribed', 'pending']).optional(),
-    }).shape }
+    inputSchema: { type: 'object' as const, properties: updateContactSchema.shape }
   },
   {
     name: 'fcrm_delete_contact',
@@ -238,7 +261,25 @@ export const fluentCRMTools: Tool[] = [
   {
     name: 'fcrm_get_campaign',
     description: 'Get a specific FluentCRM campaign by ID',
-    inputSchema: { type: 'object' as const, properties: z.object({ id: z.number() }).shape }
+    inputSchema: { type: 'object' as const, properties: campaignIdSchema.shape }
+  },
+  {
+    name: 'fcrm_get_campaign_stats',
+    description:
+      'Get FluentCRM campaign analytics: sends, opens, clicks, rates, unsubscribes (requires FluentMCP REST route fc-manager/v1/fcrm/campaigns/{id}/stats)',
+    inputSchema: { type: 'object' as const, properties: campaignIdSchema.shape }
+  },
+  {
+    name: 'fcrm_get_campaign_links',
+    description:
+      'Get per-link unique click counts for a FluentCRM campaign (optional limit; default 50 on server; requires FluentMCP route .../campaigns/{id}/links)',
+    inputSchema: { type: 'object' as const, properties: campaignLinksSchema.shape }
+  },
+  {
+    name: 'fcrm_get_campaign_clickers',
+    description:
+      'List subscribers who clicked links in a campaign; set include_contact true for email and names (requires FluentMCP route .../campaigns/{id}/clickers)',
+    inputSchema: { type: 'object' as const, properties: campaignClickersSchema.shape }
   },
   {
     name: 'fcrm_create_campaign',
@@ -545,6 +586,46 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
     try {
       const { id, ...data } = args;
       const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/campaigns/${id}`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_get_campaign_stats: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest(
+        'GET',
+        `fc-manager/v1/fcrm/campaigns/${args.id}/stats`
+      );
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_get_campaign_links: async (args: any) => {
+    try {
+      const params = new URLSearchParams();
+      if (args.limit != null) params.append('limit', String(args.limit));
+      const q = params.toString();
+      const path =
+        `fc-manager/v1/fcrm/campaigns/${args.id}/links` + (q ? `?${q}` : '');
+      const response = await makeWordPressRequest('GET', path);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_get_campaign_clickers: async (args: any) => {
+    try {
+      const params = new URLSearchParams();
+      if (args.include_contact === true) params.append('include_contact', 'true');
+      const q = params.toString();
+      const path =
+        `fc-manager/v1/fcrm/campaigns/${args.id}/clickers` + (q ? `?${q}` : '');
+      const response = await makeWordPressRequest('GET', path);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };

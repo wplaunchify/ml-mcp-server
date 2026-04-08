@@ -2,6 +2,17 @@
 
 All notable changes to the `@wplaunchify/ml-mcp-server` package will be documented in this file.
 
+## [2.7.9] - 2026-04-08
+
+### Added
+
+- **FluentCRM campaign analytics MCP tools** (requires **FluentMCP plugin ≥ 2.6.8** for `fc-manager/v1` routes):
+  - `fcrm_get_campaign_stats` — `GET .../fcrm/campaigns/{id}/stats`
+  - `fcrm_get_campaign_links` — `GET .../fcrm/campaigns/{id}/links` (optional `limit`)
+  - `fcrm_get_campaign_clickers` — `GET .../fcrm/campaigns/{id}/clickers` (optional `include_contact`)
+
+---
+
 ## [2.5.8] - 2026-01-01
 
 ### Fixed - Critical: Non-Blocking Plugin Detection ⚡
