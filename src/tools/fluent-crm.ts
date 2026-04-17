@@ -114,6 +114,36 @@ const createTemplateSchema = z.object({
   design_template: z.enum(['simple', 'plain', 'classic', 'raw_classic', 'raw_html']).optional(),
 });
 
+// Note / Activity schemas
+const noteTypeSchema = z.enum(['note', 'call', 'email', 'meeting', 'activity']);
+
+const listNotesSchema = z.object({
+  id: z.number(),
+  per_page: z.number().optional(),
+  page: z.number().optional(),
+  type: noteTypeSchema.optional(),
+});
+
+const createNoteSchema = z.object({
+  id: z.number(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  type: noteTypeSchema.optional(),
+});
+
+const updateNoteSchema = z.object({
+  id: z.number(),
+  note_id: z.number(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  type: noteTypeSchema.optional(),
+});
+
+const deleteNoteSchema = z.object({
+  id: z.number(),
+  note_id: z.number(),
+});
+
 // ==================== TOOL DEFINITIONS ====================
 
 export const fluentCRMTools: Tool[] = [
@@ -326,6 +356,28 @@ export const fluentCRMTools: Tool[] = [
     name: 'fcrm_delete_template',
     description: 'Delete a FluentCRM email template',
     inputSchema: { type: 'object' as const, properties: z.object({ id: z.number() }).shape }
+  },
+
+  // Contact Notes / Activities
+  {
+    name: 'fcrm_list_notes',
+    description: 'List notes and activities for a FluentCRM contact. Filter by type: note, call, email, meeting, activity.',
+    inputSchema: { type: 'object' as const, properties: listNotesSchema.shape }
+  },
+  {
+    name: 'fcrm_create_note',
+    description: 'Create a note or activity on a FluentCRM contact. Supports HTML in description.',
+    inputSchema: { type: 'object' as const, properties: createNoteSchema.shape }
+  },
+  {
+    name: 'fcrm_update_note',
+    description: 'Update a note or activity on a FluentCRM contact.',
+    inputSchema: { type: 'object' as const, properties: updateNoteSchema.shape }
+  },
+  {
+    name: 'fcrm_delete_note',
+    description: 'Delete a note or activity from a FluentCRM contact.',
+    inputSchema: { type: 'object' as const, properties: deleteNoteSchema.shape }
   },
 ];
 
@@ -678,6 +730,52 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
   fcrm_delete_template: async (args: any) => {
     try {
       const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/templates/${args.id}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  // Contact Notes / Activities handlers
+  fcrm_list_notes: async (args: any) => {
+    try {
+      const params = new URLSearchParams();
+      if (args.per_page) params.append('per_page', args.per_page);
+      if (args.page) params.append('page', args.page);
+      if (args.type) params.append('type', args.type);
+      const q = params.toString();
+      const path = `fc-manager/v1/fcrm/contacts/${args.id}/notes` + (q ? `?${q}` : '');
+      const response = await makeWordPressRequest('GET', path);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_create_note: async (args: any) => {
+    try {
+      const { id, ...data } = args;
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcrm/contacts/${id}/notes`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_update_note: async (args: any) => {
+    try {
+      const { id, note_id, ...data } = args;
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/contacts/${id}/notes/${note_id}`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_delete_note: async (args: any) => {
+    try {
+      const { id, note_id } = args;
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/contacts/${id}/notes/${note_id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
