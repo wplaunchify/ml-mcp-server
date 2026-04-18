@@ -6,27 +6,30 @@ import { makeWordPressRequest } from '../wordpress.js';
 export const mlCanvasTools = [
   {
     name: 'mlcanvas_create_page',
-    description: 'Create a custom HTML/CSS page using ML Canvas Block. Perfect for landing pages, full-width designs, and custom layouts. No block recovery needed!',
+    description: 'Create a custom HTML/CSS page using ML Canvas Block. IMPORTANT CSS RULES: (1) Do NOT generate <html> or <body> tags - start at your wrapper div. (2) Set backgrounds on .container (or your own class), NEVER on body. (3) Use class-based selectors (.hero h1) not bare elements (h1). For full custom pages, set hideHeader, hideFooter, hideTitle, canvasMode, and dequeueKadenceGlobal all to true.',
     inputSchema: { type: 'object' as const, properties: z.object({
       title: z.string().describe('Page title (required)'),
-      html: z.string().optional().describe('Custom HTML content'),
-      css: z.string().optional().describe('Custom CSS styles'),
+      html: z.string().optional().describe('Custom HTML content. Start with a wrapper div like <div class="container">. Do NOT include <html> or <body> tags.'),
+      css: z.string().optional().describe('Custom CSS styles. Target .container for page backgrounds, NOT body. Use class-based selectors for headings.'),
+      post_type: z.enum(['page', 'post']).optional().describe('Content type: page (default) or post'),
       hideHeader: z.boolean().optional().describe('Hide site header'),
       hideFooter: z.boolean().optional().describe('Hide site footer'),
       canvasMode: z.boolean().optional().describe('Full-width canvas mode (100% width, zero padding)'),
       hideTitle: z.boolean().optional().describe('Hide page title/hero section'),
+      dequeueKadenceGlobal: z.boolean().optional().describe('Remove Kadence theme global CSS to prevent heading/color overrides. Recommended true for custom designs.'),
       status: z.enum(['draft', 'publish']).optional().describe('Page status (default: draft)'),
     }).shape },
   },
   {
     name: 'mlcanvas_edit_page',
-    description: 'Surgical editing for ML Canvas pages - find/replace specific HTML/CSS snippets without rewriting entire page. Works on ANY post type with ML Canvas block.',
+    description: 'Surgical editing for ML Canvas pages - find/replace specific HTML/CSS snippets without rewriting entire page. Works on ANY post type with ML Canvas block. Can also toggle page settings like dequeueKadenceGlobal.',
     inputSchema: { type: 'object' as const, properties: z.object({
       page_id: z.number().describe('Page/Post ID to edit (required)'),
       find_html: z.string().optional().describe('HTML string to find and replace'),
       replace_html: z.string().optional().describe('New HTML to replace with'),
       find_css: z.string().optional().describe('CSS string to find and replace'),
       replace_css: z.string().optional().describe('New CSS to replace with'),
+      dequeueKadenceGlobal: z.boolean().optional().describe('Remove Kadence theme global CSS on this page'),
     }).shape },
   },
   {
