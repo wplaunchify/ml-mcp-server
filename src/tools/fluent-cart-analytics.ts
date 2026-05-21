@@ -85,7 +85,7 @@ export const fluentCartAnalyticsHandlers: Record<string, (args: any) => Promise<
       if (args.date_from) params.date_from = args.date_from;
       if (args.date_to) params.date_to = args.date_to;
       
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fluentcart/reports/overview', params);
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fcart/reports/overview', params);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -94,7 +94,7 @@ export const fluentCartAnalyticsHandlers: Record<string, (args: any) => Promise<
 
   fcart_get_quick_stats: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fluentcart/reports/quick-stats');
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fcart/reports/quick-stats');
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -103,7 +103,7 @@ export const fluentCartAnalyticsHandlers: Record<string, (args: any) => Promise<
 
   fcart_get_dashboard_stats: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fluentcart/dashboard/stats');
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fcart/dashboard/stats');
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -117,7 +117,7 @@ export const fluentCartAnalyticsHandlers: Record<string, (args: any) => Promise<
       if (args.date_to) params.date_to = args.date_to;
       if (args.type) params.type = args.type;
       
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fluentcart/analytics', params);
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fcart/analytics', params);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -126,7 +126,7 @@ export const fluentCartAnalyticsHandlers: Record<string, (args: any) => Promise<
 
   fcart_get_settings: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fluentcart/settings');
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fcart/settings');
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -139,7 +139,7 @@ export const fluentCartAnalyticsHandlers: Record<string, (args: any) => Promise<
       if (args.per_page) params.per_page = args.per_page;
       if (args.page) params.page = args.page;
       
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fluentcart/tax/classes', params);
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fcart/tax/classes', params);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -148,7 +148,7 @@ export const fluentCartAnalyticsHandlers: Record<string, (args: any) => Promise<
 
   fcart_list_shipping_zones: async (args: any) => {
     try {
-      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fluentcart/shipping/zones');
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fcart/shipping/zones');
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };

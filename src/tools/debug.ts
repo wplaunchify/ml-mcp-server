@@ -12,8 +12,15 @@ import { z } from 'zod';
 const debugOptionsSchema = z.object({});
 const debugFluentCRMSchema = z.object({});
 
+const siteContextSchema = z.object({});
+
 // Tool Definitions
 export const debugTools: Tool[] = [
+  {
+    name: 'fmcp_get_site_context',
+    description: 'Site-wide FluentMCP context: installed products, versions, counts, ENABLED_TOOLS categories, discovery URLs. Call first on a new site.',
+    inputSchema: { type: 'object', properties: siteContextSchema.shape }
+  },
   {
     name: 'debug_options',
     description: 'Debug endpoint to find FluentCommunity option names and values',
@@ -28,6 +35,15 @@ export const debugTools: Tool[] = [
 
 // Tool Handlers
 export const debugHandlers = {
+  fmcp_get_site_context: async () => {
+    try {
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/mcp/site-context');
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
   debug_options: async (args: any) => {
     try {
       const response = await makeWordPressRequest('GET', 'fc-manager/v1/debug/options');

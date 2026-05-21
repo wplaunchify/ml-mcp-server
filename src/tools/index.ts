@@ -43,6 +43,7 @@ const toolCategories = {
     ...mlImageEditorTools,  // AI image generation via ML Image Editor
     ...mlMediaHubTools,     // Image search & icon import via ML Media Hub P2P
     ...mlSocialTools,       // Social media publishing via ML Social
+    ...debugTools,          // fmcp_get_site_context (v2.7.0)
     ...fluentMcpProTools    // FluentMCP Pro (WooCommerce, file system, database, etc.)
   ],
   // Full FluentCommunity (91 tools) - legacy support
@@ -101,6 +102,7 @@ const handlerCategories = {
     ...mlImageEditorHandlers,  // AI image generation
     ...mlMediaHubHandlers,     // Image search & icon import
     ...mlSocialHandlers,       // Social media publishing
+    ...debugHandlers,          // fmcp_get_site_context
     ...fluentMcpProHandlers    // FluentMCP Pro (WooCommerce, file system, database, etc.)
   },
   fluentcommunity: {

@@ -144,6 +144,90 @@ const deleteNoteSchema = z.object({
   note_id: z.number(),
 });
 
+const dryRunSchema = z.object({ dry_run: z.boolean().optional() });
+
+const upsertContactSchema = createContactSchema.extend({
+  id: z.number().optional(),
+  force_update: z.boolean().optional(),
+  detach_tags: z.array(z.union([z.number(), z.string()])).optional(),
+  detach_lists: z.array(z.union([z.number(), z.string()])).optional(),
+});
+
+const bulkUpsertContactsSchema = z.object({
+  contacts: z.array(z.record(z.any())),
+  force_update: z.boolean().optional(),
+  double_optin: z.boolean().optional(),
+  dry_run: z.boolean().optional(),
+});
+
+const applySegmentsSchema = z.object({
+  contact_ids: z.array(z.number()).optional(),
+  subscriber_ids: z.array(z.number()).optional(),
+  search: z.string().optional(),
+  status: fluentCrmContactStatusSchema.optional(),
+  attach_tags: z.array(z.union([z.number(), z.string()])).optional(),
+  detach_tags: z.array(z.union([z.number(), z.string()])).optional(),
+  tags: z.array(z.union([z.number(), z.string()])).optional(),
+  attach_lists: z.array(z.union([z.number(), z.string()])).optional(),
+  detach_lists: z.array(z.union([z.number(), z.string()])).optional(),
+  lists: z.array(z.union([z.number(), z.string()])).optional(),
+  dry_run: z.boolean().optional(),
+});
+
+const upsertCampaignSchema = createCampaignSchema.extend({
+  id: z.number().optional(),
+});
+
+const changeCampaignStatusSchema = z.object({
+  id: z.number(),
+  action: z.enum(['pause', 'resume', 'duplicate', 'schedule', 'send', 'delete']),
+  scheduled_at: z.string().optional(),
+  dry_run: z.boolean().optional(),
+});
+
+const sendTestEmailSchema = z.object({
+  id: z.number(),
+  email: z.string().email().optional(),
+});
+
+const sendEmailToContactSchema = z.object({
+  id: z.number(),
+  campaign: z.record(z.any()),
+});
+
+const listAutomationsSchema = z.object({
+  page: z.number().optional(),
+  per_page: z.number().optional(),
+  search: z.string().optional(),
+});
+
+const getSequenceSchema = z.object({
+  id: z.number(),
+  include_email_bodies: z.boolean().optional(),
+});
+
+const manageSequenceSubscribersSchema = z.object({
+  id: z.number(),
+  action: z.enum(['subscribe', 'unsubscribe']).optional(),
+  contact_ids: z.array(z.number()).optional(),
+  subscriber_ids: z.array(z.number()).optional(),
+  subscribers: z.record(z.any()).optional(),
+  dry_run: z.boolean().optional(),
+});
+
+const updateAutomationStatusSchema = z.object({
+  id: z.number(),
+  contact_id: z.number(),
+  status: z.string(),
+});
+
+const previewDeleteIdSchema = z.object({ id: z.number() });
+
+const previewDeleteNoteSchema = z.object({
+  id: z.number(),
+  note_id: z.number(),
+});
+
 // ==================== TOOL DEFINITIONS ====================
 
 export const fluentCRMTools: Tool[] = [
@@ -378,6 +462,121 @@ export const fluentCRMTools: Tool[] = [
     name: 'fcrm_delete_note',
     description: 'Delete a note or activity from a FluentCRM contact.',
     inputSchema: { type: 'object' as const, properties: deleteNoteSchema.shape }
+  },
+  {
+    name: 'fcrm_get_crm_context',
+    description: 'FluentCRM context: versions, counts, contact statuses, note types, custom fields schema, canonical /fcrm endpoints.',
+    inputSchema: { type: 'object' as const, properties: z.object({}).shape }
+  },
+  {
+    name: 'fcrm_estimate_contacts',
+    description: 'Count FluentCRM contacts matching filters without loading full list (same filters as fcrm_list_contacts).',
+    inputSchema: { type: 'object' as const, properties: listContactsSchema.shape }
+  },
+  {
+    name: 'fcrm_upsert_contact',
+    description: 'Create or update a FluentCRM contact by id or email (single upsert).',
+    inputSchema: { type: 'object' as const, properties: upsertContactSchema.shape }
+  },
+  {
+    name: 'fcrm_bulk_upsert_contacts',
+    description: 'Batch create/update up to 500 contacts. Set dry_run true to preview only.',
+    inputSchema: { type: 'object' as const, properties: bulkUpsertContactsSchema.shape }
+  },
+  {
+    name: 'fcrm_apply_segments_to_contacts',
+    description: 'Bulk attach/detach tags and lists by contact IDs or search/status filters. dry_run previews ID lists.',
+    inputSchema: { type: 'object' as const, properties: applySegmentsSchema.shape }
+  },
+  {
+    name: 'fcrm_upsert_campaign',
+    description: 'Create or update a FluentCRM campaign (pass id in body to update).',
+    inputSchema: { type: 'object' as const, properties: upsertCampaignSchema.shape }
+  },
+  {
+    name: 'fcrm_change_campaign_status',
+    description: 'Change campaign state: pause, resume, duplicate, schedule, send, or delete.',
+    inputSchema: { type: 'object' as const, properties: changeCampaignStatusSchema.shape }
+  },
+  {
+    name: 'fcrm_send_test_email',
+    description: 'Send a test copy of a campaign email.',
+    inputSchema: { type: 'object' as const, properties: sendTestEmailSchema.shape }
+  },
+  {
+    name: 'fcrm_send_email_to_contact',
+    description: 'Send a one-off custom email to one contact (campaign object with subject and body).',
+    inputSchema: { type: 'object' as const, properties: sendEmailToContactSchema.shape }
+  },
+  {
+    name: 'fcrm_preview_delete_contact',
+    description: 'Preview deleting a contact (dry run, no changes).',
+    inputSchema: { type: 'object' as const, properties: previewDeleteIdSchema.shape }
+  },
+  {
+    name: 'fcrm_preview_delete_list',
+    description: 'Preview deleting a list (dry run).',
+    inputSchema: { type: 'object' as const, properties: previewDeleteIdSchema.shape }
+  },
+  {
+    name: 'fcrm_preview_delete_tag',
+    description: 'Preview deleting a tag (dry run).',
+    inputSchema: { type: 'object' as const, properties: previewDeleteIdSchema.shape }
+  },
+  {
+    name: 'fcrm_preview_delete_note',
+    description: 'Preview deleting a contact note (dry run).',
+    inputSchema: { type: 'object' as const, properties: previewDeleteNoteSchema.shape }
+  },
+  {
+    name: 'fcrm_list_automations',
+    description: 'List FluentCRM automation funnels.',
+    inputSchema: { type: 'object' as const, properties: listAutomationsSchema.shape }
+  },
+  {
+    name: 'fcrm_get_automation',
+    description: 'Get a FluentCRM automation funnel by ID.',
+    inputSchema: { type: 'object' as const, properties: campaignIdSchema.shape }
+  },
+  {
+    name: 'fcrm_list_funnel_subscribers',
+    description: 'List contacts enrolled in an automation funnel.',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      id: z.number(),
+      page: z.number().optional(),
+      per_page: z.number().optional(),
+      search: z.string().optional(),
+    }).shape }
+  },
+  {
+    name: 'fcrm_update_contact_automation_status',
+    description: 'Update a contact status inside an automation funnel.',
+    inputSchema: { type: 'object' as const, properties: updateAutomationStatusSchema.shape }
+  },
+  {
+    name: 'fcrm_list_sequences',
+    description: 'List email sequences (FluentCampaign Pro).',
+    inputSchema: { type: 'object' as const, properties: listAutomationsSchema.shape }
+  },
+  {
+    name: 'fcrm_get_sequence',
+    description: 'Get an email sequence by ID. include_email_bodies loads sequence emails.',
+    inputSchema: { type: 'object' as const, properties: getSequenceSchema.shape }
+  },
+  {
+    name: 'fcrm_manage_sequence_subscribers',
+    description: 'Subscribe or unsubscribe contacts on a sequence (max 5000 IDs; dry_run for ID preview).',
+    inputSchema: { type: 'object' as const, properties: manageSequenceSubscribersSchema.shape }
+  },
+  {
+    name: 'fcrm_estimate_dynamic_segment',
+    description: 'Count contacts matching segment filters without returning rows (FluentCampaign Pro).',
+    inputSchema: { type: 'object' as const, properties: z.object({
+      subscribers: z.record(z.any()).optional(),
+      sending_filter: z.string().optional(),
+      dynamic_segment: z.record(z.any()).optional(),
+      advanced_filters: z.array(z.any()).optional(),
+    }).shape }
   },
 ];
 
@@ -637,7 +836,26 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
   fcrm_send_campaign: async (args: any) => {
     try {
       const { id, ...data } = args;
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcrm/campaigns/${id}/send`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_update_campaign: async (args: any) => {
+    try {
+      const { id, ...data } = args;
       const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/campaigns/${id}`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_delete_campaign: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/campaigns/${args.id}`);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
@@ -774,8 +992,226 @@ export const fluentCRMHandlers: Record<string, (args: any) => Promise<any>> = {
 
   fcrm_delete_note: async (args: any) => {
     try {
-      const { id, note_id } = args;
-      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/contacts/${id}/notes/${note_id}`);
+      const { id, note_id, ...rest } = args;
+      const response = await makeWordPressRequest('DELETE', `fc-manager/v1/fcrm/contacts/${id}/notes/${note_id}`, rest);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_get_crm_context: async () => {
+    try {
+      const response = await makeWordPressRequest('GET', 'fc-manager/v1/fcrm/context');
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_estimate_contacts: async (args: any) => {
+    try {
+      const params = new URLSearchParams();
+      if (args.search) params.append('search', args.search);
+      if (args.status) params.append('status', args.status);
+      const q = params.toString();
+      const path = 'fc-manager/v1/fcrm/contacts/estimate' + (q ? `?${q}` : '');
+      const response = await makeWordPressRequest('GET', path);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_upsert_contact: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/contacts/upsert', args);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_bulk_upsert_contacts: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/contacts/bulk-upsert', args);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_apply_segments_to_contacts: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/contacts/apply-segments', args);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_upsert_campaign: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/campaigns/upsert', args);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_change_campaign_status: async (args: any) => {
+    try {
+      const { id, ...data } = args;
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcrm/campaigns/${id}/status`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_send_test_email: async (args: any) => {
+    try {
+      const { id, ...data } = args;
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcrm/campaigns/${id}/send-test`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_send_email_to_contact: async (args: any) => {
+    try {
+      const { id, campaign } = args;
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcrm/contacts/${id}/send-email`, { campaign });
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_preview_delete_contact: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/contacts/${args.id}/delete-preview`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_preview_delete_list: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/lists/${args.id}/delete-preview`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_preview_delete_tag: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/tags/${args.id}/delete-preview`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_preview_delete_note: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/contacts/${args.id}/notes/${args.note_id}/delete-preview`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_list_automations: async (args: any) => {
+    try {
+      const params = new URLSearchParams();
+      if (args.page) params.append('page', String(args.page));
+      if (args.per_page) params.append('per_page', String(args.per_page));
+      if (args.search) params.append('search', args.search);
+      const q = params.toString();
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/automations${q ? `?${q}` : ''}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_get_automation: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/automations/${args.id}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_list_funnel_subscribers: async (args: any) => {
+    try {
+      const { id, ...rest } = args;
+      const params = new URLSearchParams();
+      if (rest.page) params.append('page', String(rest.page));
+      if (rest.per_page) params.append('per_page', String(rest.per_page));
+      if (rest.search) params.append('search', rest.search);
+      const q = params.toString();
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/automations/${id}/subscribers${q ? `?${q}` : ''}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_update_contact_automation_status: async (args: any) => {
+    try {
+      const { id, contact_id, status } = args;
+      const response = await makeWordPressRequest('PUT', `fc-manager/v1/fcrm/automations/${id}/contacts/${contact_id}/status`, { status });
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_list_sequences: async (args: any) => {
+    try {
+      const params = new URLSearchParams();
+      if (args.page) params.append('page', String(args.page));
+      if (args.per_page) params.append('per_page', String(args.per_page));
+      if (args.search) params.append('search', args.search);
+      const q = params.toString();
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/sequences${q ? `?${q}` : ''}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_get_sequence: async (args: any) => {
+    try {
+      const params = new URLSearchParams();
+      if (args.include_email_bodies) params.append('include_email_bodies', 'true');
+      const q = params.toString();
+      const response = await makeWordPressRequest('GET', `fc-manager/v1/fcrm/sequences/${args.id}${q ? `?${q}` : ''}`);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_manage_sequence_subscribers: async (args: any) => {
+    try {
+      const { id, ...data } = args;
+      const response = await makeWordPressRequest('POST', `fc-manager/v1/fcrm/sequences/${id}/subscribers`, data);
+      return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
+    } catch (error: any) {
+      return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
+    }
+  },
+
+  fcrm_estimate_dynamic_segment: async (args: any) => {
+    try {
+      const response = await makeWordPressRequest('POST', 'fc-manager/v1/fcrm/segments/estimate', args);
       return { toolResult: { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] } };
     } catch (error: any) {
       return { toolResult: { isError: true, content: [{ type: 'text', text: `Error: ${error.message}` }] } };
