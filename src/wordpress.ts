@@ -4,6 +4,25 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/**
+ * Pinned browser User-Agent for every outbound HTTP call this server makes.
+ *
+ * PROVEN (live test against a Rocket.net + Cloudflare site, Jun 2026): Cloudflare
+ * bot management returns HTTP 403 based on the HTTP User-Agent BEFORE WordPress
+ * runs. Non-browser/library UAs (the default axios/x, node, undici,
+ * python-requests, Go, empty) get blocked; a real browser UA passes. So we pin a
+ * known browser string on every request to the customer site rather than ship a
+ * library UA. Override with the ML_HTTP_USER_AGENT env var if ever needed.
+ */
+export const BROWSER_USER_AGENT =
+  process.env.ML_HTTP_USER_AGENT ||
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+// Safety net: apply the browser UA to every request made through the global axios
+// instance too (media downloads, the wp.org plugin API, the plugin-repository tool,
+// and any future direct axios call), not just the WordPress client below.
+axios.defaults.headers.common['User-Agent'] = BROWSER_USER_AGENT;
+
 // Global WordPress API client instance
 let wpClient: AxiosInstance;
 
@@ -35,6 +54,7 @@ export async function initWordPress() {
     timeout: 120000, // 120 seconds for AI image generation (OpenRouter can be slow)
     headers: {
       'Content-Type': 'application/json',
+      'User-Agent': BROWSER_USER_AGENT,
     },
   };
 

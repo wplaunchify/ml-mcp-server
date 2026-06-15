@@ -2,6 +2,18 @@
 
 All notable changes to the `@wplaunchify/ml-mcp-server` package will be documented in this file.
 
+## [2.7.19] - 2026-06-15
+
+### Fixed
+
+- **Cloudflare 403s on Rocket.net-hosted customer sites (User-Agent bot block).** Proven by a live test against a Rocket.net + Cloudflare site: Cloudflare bot management returns HTTP 403 based on the HTTP User-Agent *before* WordPress runs, and a library UA (axios' default `axios/x`, plus `node`/`undici`/`python-requests`/`Go`/empty) is a gamble — several get blocked. Every outbound request now pins a real browser User-Agent (`Mozilla/5.0 … Chrome/124.0.0.0 Safari/537.36`):
+  - set on the WordPress API client (`wpClient`) so every `makeWordPressRequest` call to the customer site carries it;
+  - set on the global axios default too, covering media downloads, the wp.org plugin API, and the plugin-repository tool.
+  - Override via the `ML_HTTP_USER_AGENT` env var if ever needed.
+- This fixes every customer automatically with no per-customer config. Matches the ML Plugin Manager 7.0.387 / ML Social 1.9.26 hardening.
+
+---
+
 ## [2.7.10] - 2026-04-08
 
 ### Added
